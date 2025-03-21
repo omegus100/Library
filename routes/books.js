@@ -4,6 +4,7 @@ const Book = require('../models/book')
 const Author = require('../models/author')
 const book = require('../models/book')
 const imageMimeTypes = ['image/jpeg', 'image/png', 'image/gif']
+const { bookTypes } = require('../models/book')
 
 // All Books Route
 router.get('/', async (req, res) => {
@@ -26,7 +27,6 @@ router.get('/', async (req, res) => {
     } catch {
         res.redirect('/')
     }
-
 })
 
 // New Book Route
@@ -119,7 +119,6 @@ router.delete('/:id', async (req, res) => {
     }
 })
 
-
 async function renderNewPage(res, book, hasError = false) {
     renderFormPage(res, book, 'new', hasError)
 }
@@ -133,7 +132,8 @@ async function renderFormPage(res, book, form, hasError = false) {
         const authors = await Author.find({})        
         const params = {
             authors: authors,
-            book: book
+            book: book,
+            bookTypes: bookTypes
         }
          if (hasError) {
             if (form === 'edit') {

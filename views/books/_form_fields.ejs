@@ -29,6 +29,14 @@
         <label>Page Count</label>
         <input type="number" name="pageCount"  min="1" value="<%= book.pageCount %>">
     </div>
+    <div class="form-item">
+        <label>Book Type</label>
+        <select name="author">
+            <% bookTypes.forEach(type => {%>
+                <option label="<%= type %>" value="<%= type %>"></option>
+            <%}) %>    
+        </select>
+    </div>
 </div>
 
 <div class="form-row">
@@ -41,4 +49,5 @@
         <textarea name="description"><%= book.description %></textarea>
     </div>
 </div>
+
 
