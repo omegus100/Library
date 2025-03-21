@@ -6,8 +6,8 @@ const Book = require('../models/book')
 // All Authors Route
 router.get('/', async (req, res) => {
     let searchOptions = {}
-    if (req.query.name != null && req.query.name !== ''){
-        searchOptions.name = new RegExp(req.query.name, 'i')
+    if (req.query.firstName != null && req.query.firstName !== ''){
+        searchOptions.firstName = new RegExp(req.query.firstName, 'i')
     }
     try {    
         const authors = await Author.find(searchOptions)
@@ -28,7 +28,8 @@ router.get('/new', (req, res) => {
 // Create Author Route
 router.post('/', async (req, res) => {
     const author = new Author({
-        name: req.body.name
+        firstName: req.body.firstName,
+        lastName: req.body.lastName
     })
     try {
         const newAuthor = await author.save()
@@ -68,7 +69,7 @@ router.put('/:id', async (req, res) => {
     let author
     try {
         author = await Author.findById(req.params.id)
-        author.name = req.body.name
+        author.firstName = req.body.firstName
         await author.save()
         res.redirect(`/authors/${author.id}`)
     } catch {

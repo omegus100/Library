@@ -2,8 +2,12 @@
 <form actions="/authors" method="GET">
     <div class="form-row">
         <div class="form-item">
-            <label>Name</label>
-            <input type="text" name="name" value="<%= searchOptions.name %>">
+            <label>First Name</label>
+            <input type="text" name="firstName" value="<%= searchOptions.firstName %>">
+        </div>
+        <div class="form-item">
+            <label>Last Name</label>
+            <input type="text" name="lastName" value="<%= searchOptions.lastName %>">
         </div>
     </div>
     <div class="form-row form-row-end">
@@ -13,7 +17,7 @@
 <br>
 <% authors.forEach(author => { %>      
     <div class="author-row">
-        <div class="author-name"><%= author.name %></div>
+        <div class="author-name"><%= author.firstName %> <%= author.lastName %></div>
         <div class="btn-row">   
             <a class="btn btn-primary" href="/authors/<%= author.id %>">View</a>
             <a class="btn btn-primary" href="/authors/<%= author.id %>/edit">Edit</a>
