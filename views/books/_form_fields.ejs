@@ -31,9 +31,9 @@
     </div>
     <div class="form-item">
         <label>Book Type</label>
-        <select name="author">
+        <select name="bookType">
             <% bookTypes.forEach(type => {%>
-                <option label="<%= type %>" value="<%= type %>"></option>
+                <option value="<%= type %>" <%= book.bookType.includes(type) ? 'selected' : '' %>><%= type %></option>
             <%}) %>    
         </select>
     </div>
