@@ -1,7 +1,5 @@
 const mongoose = require('mongoose')
 
-const bookTypes = ['Paperback','Hardback', 'eBook', 'Audiobook']
-
 const bookSchema = new mongoose.Schema({
     title: {
         type: String,
@@ -35,12 +33,7 @@ const bookSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         required: true,
         ref: 'Author'
-    },
-    bookType: {
-        type: [String],
-        enum: bookTypes,
-        required: true
-    } 
+    }
 })
 
 bookSchema.virtual('coverImagePath').get(function() {
@@ -50,4 +43,3 @@ bookSchema.virtual('coverImagePath').get(function() {
 })
 
 module.exports = mongoose.model('Book', bookSchema)
-module.exports.bookTypes = bookTypes
