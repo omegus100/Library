@@ -5,6 +5,7 @@ const Author = require('../models/author')
 const book = require('../models/book')
 const imageMimeTypes = ['image/jpeg', 'image/png', 'image/gif']
 const { bookTypes } = require('../models/book')
+const { bookGenres } = require('../models/book')
 
 // All Books Route
 router.get('/', async (req, res) => {
@@ -42,7 +43,8 @@ router.post('/', async (req, res) => {
         publishDate: new Date(req.body.publishDate),
         pageCount: req.body.pageCount,
         description: req.body.description,
-        bookType: req.body.bookType
+        bookType: req.body.bookType,
+        bookGenre: req.body.bookGenre
     }) 
     saveCover(book, req.body.cover)
 
@@ -85,7 +87,8 @@ router.put('/:id', async (req, res) => {
         book.publishDate = new Date(req.body.publishDate)
         book.pageCount = req.body.pageCount
         book.description = req.body.description
-        book.bookType = req.body.bookType
+        book.bookType = req.body.bookType,
+        book.bookGenre = req.body.bookGenre
         if (req.body.cover != null && req.body.cover != '') {
             saveCover(book, req.body.cover)
         }
@@ -135,7 +138,8 @@ async function renderFormPage(res, book, form, hasError = false) {
         const params = {
             authors: authors,
             book: book,
-            bookTypes: bookTypes
+            bookTypes: bookTypes,
+            bookGenres: bookGenres
         }
          if (hasError) {
             if (form === 'edit') {
