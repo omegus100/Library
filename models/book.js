@@ -1,11 +1,8 @@
 const mongoose = require('mongoose')
 
-<<<<<<< HEAD
-=======
 const bookTypes = ['Paperback','Hardback', 'eBook', 'Audiobook']
 const bookGenres = ["Biography", "Classics", "Fantasy", "Historical Fiction", "Horror", "Mystery", "Non-Fiction", "Romance", "Science Fiction", "Thriller", "Young Adult"]
 
->>>>>>> book-types
 const bookSchema = new mongoose.Schema({
     title: {
         type: String,
@@ -39,9 +36,6 @@ const bookSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         required: true,
         ref: 'Author'
-<<<<<<< HEAD
-    }
-=======
     },
     bookType: {
         type: [String],
@@ -52,7 +46,6 @@ const bookSchema = new mongoose.Schema({
         type: [String],
         enum: bookGenres
     } 
->>>>>>> book-types
 })
 
 bookSchema.virtual('coverImagePath').get(function() {
@@ -62,8 +55,6 @@ bookSchema.virtual('coverImagePath').get(function() {
 })
 
 module.exports = mongoose.model('Book', bookSchema)
-<<<<<<< HEAD
-=======
 module.exports.bookTypes = bookTypes
 module.exports.bookGenres = bookGenres
->>>>>>> book-types
+

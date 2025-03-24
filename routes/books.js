@@ -4,11 +4,10 @@ const Book = require('../models/book')
 const Author = require('../models/author')
 const book = require('../models/book')
 const imageMimeTypes = ['image/jpeg', 'image/png', 'image/gif']
-<<<<<<< HEAD
-=======
+
 const { bookTypes } = require('../models/book')
 const { bookGenres } = require('../models/book')
->>>>>>> book-types
+
 
 // All Books Route
 router.get('/', async (req, res) => {
@@ -142,13 +141,9 @@ async function renderFormPage(res, book, form, hasError = false) {
         const authors = await Author.find({})        
         const params = {
             authors: authors,
-<<<<<<< HEAD
-            book: book
-=======
             book: book,
             bookTypes: bookTypes,
-            bookGenres: bookGenres
->>>>>>> book-types
+            bookGenres: bookGenres,
         }
          if (hasError) {
             if (form === 'edit') {
