@@ -29,6 +29,28 @@
         <label>Page Count</label>
         <input type="number" name="pageCount"  min="1" value="<%= book.pageCount %>">
     </div>
+<<<<<<< HEAD
+=======
+</div>
+
+<div class="form-row">
+    <div class="form-item">
+        <label>Book Type</label>
+        <select name="bookType">
+            <% bookTypes.forEach(type => {%>
+                <option value="<%= type %>" <%= book.bookType.includes(type) ? 'selected' : '' %>><%= type %></option>
+            <%}) %>    
+        </select>
+    </div>
+    <div class="form-item">
+        <label>Genre</label>
+        <select name="bookGenre">
+            <% bookGenres.forEach(genre => {%>
+                <option value="<%= genre %>" <%= book.bookGenre.includes(genre) ? 'selected' : '' %>><%= genre %></option>
+            <%}) %>    
+        </select>
+    </div>
+>>>>>>> book-types
 </div>
 
 <div class="form-row">

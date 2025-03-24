@@ -4,6 +4,11 @@ const Book = require('../models/book')
 const Author = require('../models/author')
 const book = require('../models/book')
 const imageMimeTypes = ['image/jpeg', 'image/png', 'image/gif']
+<<<<<<< HEAD
+=======
+const { bookTypes } = require('../models/book')
+const { bookGenres } = require('../models/book')
+>>>>>>> book-types
 
 // All Books Route
 router.get('/', async (req, res) => {
@@ -41,7 +46,9 @@ router.post('/', async (req, res) => {
         author: req.body.author,
         publishDate: new Date(req.body.publishDate),
         pageCount: req.body.pageCount,
-        description: req.body.description
+        description: req.body.description,
+        bookType: req.body.bookType,
+        bookGenre: req.body.bookGenre
     }) 
     saveCover(book, req.body.cover)
 
@@ -84,6 +91,8 @@ router.put('/:id', async (req, res) => {
         book.publishDate = new Date(req.body.publishDate)
         book.pageCount = req.body.pageCount
         book.description = req.body.description
+        book.bookType = req.body.bookType,
+        book.bookGenre = req.body.bookGenre
         if (req.body.cover != null && req.body.cover != '') {
             saveCover(book, req.body.cover)
         }
@@ -133,7 +142,13 @@ async function renderFormPage(res, book, form, hasError = false) {
         const authors = await Author.find({})        
         const params = {
             authors: authors,
+<<<<<<< HEAD
             book: book
+=======
+            book: book,
+            bookTypes: bookTypes,
+            bookGenres: bookGenres
+>>>>>>> book-types
         }
          if (hasError) {
             if (form === 'edit') {
