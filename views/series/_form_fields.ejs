@@ -1,0 +1,21 @@
+<div class="form-row">
+    <div class="form-item">
+        <label>Title</label>
+        <input type="text" name="title" value="<%= series.title %>">
+    </div>
+    <div class="form-item">
+        <label>Author</label>
+        <select name="author">
+        <% authors.forEach(author => {%>
+         <% if (author.id === series.author) { %>
+            <option selected label="<%= author.firstName %> <%= author.lastName %>" value="<%= author.id %>">
+         <% } else { %>
+            <option label="<%= author.firstName %> <%= author.lastName %>" value="<%= author.id %>">
+         <% } %>     
+            </option>
+        <%}) %>
+        <!-- <option>Add Author</option> -->
+        </select>
+    </div>
+
+</div>

@@ -1,0 +1,21 @@
+<h2 class="page-header">Search Series</h2>
+<form actions="/series" method="GET">
+    <div class="form-row">
+        <div class="form-item">
+            <label>Title</label>
+            <input type="text" name="title" value="<%= searchOptions.title %>">
+        </div>
+    </div> 
+    <div class="form-row form-row-end">
+        <button class="btn btn-primary" type="submit">Search</button>
+    </div>  
+</form>
+<br>
+<div>
+    <% series.forEach(series => { %>          
+        <a class="author-name" href="/series/<%= series.id %>">      
+            <%= series.title %>:  <%= series.author %>
+        </a><br>
+    <% }) %>
+</div>
+
