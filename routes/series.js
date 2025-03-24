@@ -38,6 +38,16 @@ router.post('/', async (req, res) => {
     }
 })
 
+// Show Series Route
+router.get('/:id', async (req, res) => {
+    try {
+        const series = await Series.findById(req.params.id).populate('author').exec()
+        res.render('series/show', { series: series })
+    } catch {
+        res.redirect('/')
+    }
+})
+
 async function renderNewPage(res, series, hasError = false) {
     try {
         const authors = await Author.find({})

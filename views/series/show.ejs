@@ -1,10 +1,8 @@
-<h2 class="page-header"><%= author.firstName %> <%= author.lastName %></h2>
-<div class="btn-row">
-    <a class="btn btn-primary" href="/authors/<%= author.id %>/edit">Edit</a>
-    <%- include('../partials/deleteForm', { url: `/authors/${author.id}`}) %>
-</div>
+<h2 class="page-header"><%= series.title %></h2>
 
-<%  if (booksByAuthor.length > 0 ) { %>
-    <h2 class="page-header">Books by Author</h2>
-    <%- include ('../partials/bookGrid', { books: booksByAuthor }) %>
-<%  } %>
+<div class="book-details">
+    <div class="book-details-grid">
+        <div class="book-details-label">Author:</div>
+        <div><%= series.author.firstName %> <%= series.author.lastName %></div>
+    </div>
+</div>

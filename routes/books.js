@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const Book = require('../models/book')
 const Author = require('../models/author')
+const Series = require('../models/series')
 const book = require('../models/book')
 const imageMimeTypes = ['image/jpeg', 'image/png', 'image/gif']
 
@@ -63,6 +64,7 @@ router.post('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         const book = await Book.findById(req.params.id).populate('author').exec()
+        console.log(book)
         res.render('books/show', { book: book })
     } catch {
         res.redirect('/')
@@ -138,12 +140,14 @@ async function renderEditPage(res, book, hasError = false) {
 
 async function renderFormPage(res, book, form, hasError = false) {
     try {
-        const authors = await Author.find({})        
+        const authors = await Author.find({}) 
+        const series = await Series.find({}) 
         const params = {
             authors: authors,
             book: book,
             bookTypes: bookTypes,
             bookGenres: bookGenres,
+            series: series
         }
          if (hasError) {
             if (form === 'edit') {

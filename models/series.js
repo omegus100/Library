@@ -2,10 +2,10 @@ const mongoose = require('mongoose')
 const Author = require('./author')
 const Book = require('./book')
 
-const volumeSchema = new mongoose.Schema({ 
-    name: String, 
-    volume: Number 
-})
+// const volumeSchema = new mongoose.Schema({ 
+//     name: String, 
+//     volume: Number 
+// })
 
 const seriesSchema = new mongoose.Schema({
   title: {

@@ -51,6 +51,26 @@
 </div>
 
 <div class="form-row">
+    <div class="form-item">
+        <label>Series</label>
+        <select name="series">
+            <% series.forEach(series => { %>
+             <% if (series.author == book.author) { %>
+                <option selected label="<%= series.title %>" value="<%= series.id %>">
+             <% } else { %>
+                <option label="<%= series.title %>" value="<%= series.id %>">
+             <% } %>     
+                </option>
+            <% }) %>
+        </select>
+    </div>
+    <div class="form-item">
+        <label>Volume</label>
+        <input type="number" name="volume" min="1" value="<%= book.volume %>">
+    </div>
+</div>
+
+<div class="form-row">
     <div class="form-item form-item-no-grow">    
         <label>Cover</label>
         <input type="file" name="cover" class="book-cover filepond">

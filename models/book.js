@@ -3,6 +3,15 @@ const mongoose = require('mongoose')
 const bookTypes = ['Paperback','Hardback', 'eBook', 'Audiobook']
 const bookGenres = ["Biography", "Classics", "Fantasy", "Historical Fiction", "Horror", "Mystery", "Non-Fiction", "Romance", "Science Fiction", "Thriller", "Young Adult"]
 
+
+const BookSeriesSchema = new mongoose.Schema({ 
+    series: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Series'
+    },
+    volume: Number 
+})
+
 const bookSchema = new mongoose.Schema({
     title: {
         type: String,
@@ -37,6 +46,16 @@ const bookSchema = new mongoose.Schema({
         required: true,
         ref: 'Author'
     },
+    author: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'Author'
+    },
+    series: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Series'
+    },
+    volume: Number,
     bookType: {
         type: [String],
         enum: bookTypes,
