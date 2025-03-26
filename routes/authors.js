@@ -25,6 +25,13 @@ router.get('/new', (req, res) => {
     res.render('authors/new', { author: new Author()})
 })
 
+// New Author Route from Book
+router.get('/new-add', (req, res) => {
+    res.send("Add new author from book or series page")
+    // Capture initial page, post new author routes, and then redirect to original page
+    // res.render('authors/new', { author: new Author()})
+})
+
 // Create Author Route
 router.post('/', async (req, res) => {
     const author = new Author({

@@ -41,6 +41,7 @@ router.get('/new', async (req, res) => {
 
 // Create Book Route
 router.post('/', async (req, res) => {
+    // const bookSeries = req.body.bookSeries || { series: null, volume: null }
     const book = new Book({
         title: req.body.title,
         author: req.body.author,
@@ -48,7 +49,11 @@ router.post('/', async (req, res) => {
         pageCount: req.body.pageCount,
         description: req.body.description,
         bookType: req.body.bookType,
-        bookGenre: req.body.bookGenre
+        bookGenre: req.body.bookGenre,
+        bookSeries: {
+            series: req.body.seriesId,
+            volume: req.body.seriesVolume
+        }
     }) 
     saveCover(book, req.body.cover)
 
@@ -93,7 +98,8 @@ router.put('/:id', async (req, res) => {
         book.pageCount = req.body.pageCount
         book.description = req.body.description
         book.bookType = req.body.bookType,
-        book.bookGenre = req.body.bookGenre
+        book.bookGenre = req.body.bookGenre,
+        console.log(book)
         if (req.body.cover != null && req.body.cover != '') {
             saveCover(book, req.body.cover)
         }
@@ -158,6 +164,7 @@ async function renderFormPage(res, book, form, hasError = false) {
          }
         res.render(`books/${form}`, params)
        } catch {
+        console.error(error)
         res.redirect('/books')
        }
 }

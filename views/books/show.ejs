@@ -21,9 +21,15 @@
         <div><%= book.bookGenre %></div>
         <div class="book-details-label">Description:</div>
         <div><%= book.description %></div>
-        <div class="book-details-label">Series:</div>
-        <div><%= book.series %></div>
-        <div class="book-details-label">Volume:</div>
-        <div><%= book.volume %></div>
+        <% if (book.bookSeries) { %>
+            <% if (book.bookSeries.series) { %>
+                <div class="book-details-label">Series:</div>
+                <div><%= book.bookSeries.series %></div>
+            <% } %>
+            <% if (book.bookSeries.volume) { %>
+                <div class="book-details-label">Volume:</div>
+                <div><%= book.bookSeries.volume %></div>
+            <% } %>
+        <% } %>
     </div>
 </div>

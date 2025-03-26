@@ -9,6 +9,7 @@ const BookSeriesSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Series'
     },
+    title: String,
     volume: Number 
 })
 
@@ -46,16 +47,10 @@ const bookSchema = new mongoose.Schema({
         required: true,
         ref: 'Author'
     },
-    author: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true,
-        ref: 'Author'
+    bookSeries: {
+        type: BookSeriesSchema,
+        required: false
     },
-    series: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Series'
-    },
-    volume: Number,
     bookType: {
         type: [String],
         enum: bookTypes,

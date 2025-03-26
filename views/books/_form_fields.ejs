@@ -53,20 +53,15 @@
 <div class="form-row">
     <div class="form-item">
         <label>Series</label>
-        <select name="series">
-            <% series.forEach(series => { %>
-             <% if (series.author == book.author) { %>
-                <option selected label="<%= series.title %>" value="<%= series.id %>">
-             <% } else { %>
-                <option label="<%= series.title %>" value="<%= series.id %>">
-             <% } %>     
-                </option>
+        <select name="seriesId">
+            <% series.forEach(s => { %>
+                <option label="<%= s.id %> <%= s.title %>" value="<%= s.id %>" <%= book.bookSeries && book.bookSeries.series == s.id ? 'selected' : '' %>><%= s.title %></option>
             <% }) %>
         </select>
-    </div>
+    </div> 
     <div class="form-item">
         <label>Volume</label>
-        <input type="number" name="volume" min="1" value="<%= book.volume %>">
+        <input type="number" name="seriesVolume" min="1" value="<%= book.bookSeries ? book.bookSeries.volume : '' %>">
     </div>
 </div>
 

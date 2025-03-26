@@ -18,6 +18,7 @@
     justify-content: center;
     gap: 2rem;
     grid-template-columns: repeat(autofill, var(--book-cover-width));
+    justify-content: center; /* Center children horizontally */
 }
 
 .book-grid-large {
@@ -25,7 +26,15 @@
 }
 
 .book-details {
-    display: flex;
+    display: flex; 
+}
+
+.book-details-title {
+    color: var(--color-text-light);
+    text-decoration: none;
+    font-size: 1.2rem;
+    font-weight: 500;
+    align-self: center;
 }
 
 .book-details-label {
