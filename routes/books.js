@@ -5,10 +5,8 @@ const Author = require('../models/author')
 const Series = require('../models/series')
 const book = require('../models/book')
 const imageMimeTypes = ['image/jpeg', 'image/png', 'image/gif']
-
 const { bookTypes } = require('../models/book')
 const { bookGenres } = require('../models/book')
-
 
 // All Books Route
 router.get('/', async (req, res) => {
@@ -31,7 +29,6 @@ router.get('/', async (req, res) => {
     } catch {
         res.redirect('/')
     }
-
 })
 
 // New Book Route
@@ -69,8 +66,7 @@ router.post('/', async (req, res) => {
 // Show Book Route
 router.get('/:id', async (req, res) => {
     try {
-        const book = await Book.findById(req.params.id).populate('author').exec()
-   
+        const book = await Book.findById(req.params.id).populate('author').exec()  
         res.render('books/show', { book: book })
     } catch {
         res.redirect('/')
@@ -100,13 +96,11 @@ router.put('/:id', async (req, res) => {
         book.description = req.body.description
         book.bookType = req.body.bookType
         book.bookGenre = req.body.bookGenre
-        
-        // Initialize bookSeries if it does not exist   
+
+        //Code for handling series update
         if (!book.bookSeries) {     
             book.bookSeries = {}
         }
-
-        // Update bookSeries fields
         book.bookSeries.series = req.body.seriesId || book.bookSeries.series
         book.bookSeries.volume = req.body.seriesVolume || book.bookSeries.volume
 
@@ -145,7 +139,6 @@ router.delete('/:id', async (req, res) => {
         }
     }
 })
-
 
 async function renderNewPage(res, book, hasError = false) {
     renderFormPage(res, book, 'new', hasError)
