@@ -41,7 +41,6 @@ router.get('/new', async (req, res) => {
 
 // Create Book Route
 router.post('/', async (req, res) => {
-    // const bookSeries = req.body.bookSeries || { series: null, volume: null }
     const book = new Book({
         title: req.body.title,
         author: req.body.author,
@@ -57,6 +56,7 @@ router.post('/', async (req, res) => {
         }
     }) 
     saveCover(book, req.body.cover)
+    saveSeriesTitle(book, req.body.seriesTitle)
 
     try {
         const newBook = await book.save()
@@ -101,21 +101,23 @@ router.put('/:id', async (req, res) => {
         book.bookType = req.body.bookType
         book.bookGenre = req.body.bookGenre
         
-        // Initialize bookSeries if it does not exist
-        if (book.bookSeries) {
-            console.log("successful")
+        // Initialize bookSeries if it does not exist   
+        if (!book.bookSeries) {     
+            book.bookSeries = {}
         }
 
-        // // Update bookSeries fields
-        // book.bookSeries.series = req.body.bookSeries.series || book.bookSeries.series
-        // book.bookSeries.volume = req.body.bookSeries.volume || book.bookSeries.volume
-     
+        // Update bookSeries fields
+        book.bookSeries.series = req.body.seriesId || book.bookSeries.series
+        book.bookSeries.volume = req.body.seriesVolume || book.bookSeries.volume
+
         if (req.body.cover != null && req.body.cover != '') {
             saveCover(book, req.body.cover)
         }
         await book.save()
         res.redirect(`/books/${book.id}`)
-    } catch {
+    } catch (error) {
+        // console.error('Error updating book:', error)
+        // console.error('Request body:', req.body)
         if (book != null ) {
             renderEditPage(res, book, true)
         } else {         
@@ -150,6 +152,7 @@ async function renderNewPage(res, book, hasError = false) {
 }
 
 async function renderEditPage(res, book, hasError = false) {
+    // console.log('Rendering edit page. Has error:', hasError)
     renderFormPage(res, book, 'edit', hasError)
 }
 
@@ -185,6 +188,10 @@ function saveCover(book, coverEncoded) {
     book.coverImage = new Buffer.from(cover.data, 'base64')
     book.coverImageType = cover.type
    }
+}
+
+function saveSeriesTitle(book, seriesTitle){
+    console.log(book, seriesTitle)
 }
 
 module.exports = router

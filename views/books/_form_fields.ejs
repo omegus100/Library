@@ -60,6 +60,10 @@
                 <option label="<%= s.id %> <%= s.title %>" value="<%= s.id %>" <%= book.bookSeries && book.bookSeries.series == s.id ? 'selected' : '' %>><%= s.title %></option>
             <% }) %>
         </select>
+    </div>
+    <div class="form-item hide">    
+        <label>Series Title</label>
+        <input type="text" name="seriesTitle" value>
     </div> 
     <div class="form-item">
         <label>Volume</label>
