@@ -6,6 +6,7 @@
     <div class="form-item">
         <label>Author</label>
         <select name="author">
+            <option label="" value=""></option>
         <% authors.forEach(author => {%>
          <% if (author.id === book.author) { %>
             <option selected label="<%= author.firstName %> <%= author.lastName %>" value="<%= author.id %>">
@@ -54,6 +55,7 @@
     <div class="form-item">
         <label>Series</label>
         <select name="seriesId">
+            <option label="" value=""></option>
             <% series.forEach(s => { %>
                 <option label="<%= s.id %> <%= s.title %>" value="<%= s.id %>" <%= book.bookSeries && book.bookSeries.series == s.id ? 'selected' : '' %>><%= s.title %></option>
             <% }) %>

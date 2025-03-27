@@ -1,8 +1,18 @@
 <h2 class="page-header"><%= series.title %></h2>
 
 <div class="book-details">
-    <div class="book-details-grid">
+    <div class="series-details-grid">
         <div class="book-details-label">Author:</div>
-        <div><%= series.author.firstName %> <%= series.author.lastName %></div>
+        <div>
+            <a href="/authors/<%= series.author.id %>">
+                <%= series.author.firstName %> <%= series.author.lastName %>
+            </a>
+        </div>
     </div>
 </div>
+<br>
+<%  if (booksBySeries.length > 0 ) { %>
+    <h2 class="page-header">Books in Series</h2>
+    <%- include ('../partials/bookGrid', { books: booksBySeries }) %>
+<%  } %>
+

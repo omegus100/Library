@@ -19,12 +19,16 @@
         <div><%= book.bookType %></div>
         <div class="book-details-label">Genre:</div>
         <div><%= book.bookGenre %></div>
-        <div class="book-details-label">Description:</div>
-        <div><%= book.description %></div>
+        <% if (book.description) { %>
+            <div class="book-details-label">Description:</div>
+            <div><%= book.description %></div>
+        <% } %>
         <% if (book.bookSeries) { %>
             <% if (book.bookSeries.series) { %>
                 <div class="book-details-label">Series:</div>
-                <div><%= book.bookSeries.series %></div>
+                <div>
+                    <a href="/series/<%= book.bookSeries.series %>"><%= book.bookSeries.series %></a>
+                </div>
             <% } %>
             <% if (book.bookSeries.volume) { %>
                 <div class="book-details-label">Volume:</div>
@@ -33,3 +37,4 @@
         <% } %>
     </div>
 </div>
+

@@ -42,7 +42,11 @@ router.post('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         const series = await Series.findById(req.params.id).populate('author').exec()
-        res.render('series/show', { series: series })
+        const books = await Book.find({ 'bookSeries.series': series.id })
+        res.render('series/show', {
+             series: series,
+             booksBySeries: books
+            })
     } catch {
         res.redirect('/')
     }

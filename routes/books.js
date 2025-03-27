@@ -52,6 +52,7 @@ router.post('/', async (req, res) => {
         bookGenre: req.body.bookGenre,
         bookSeries: {
             series: req.body.seriesId,
+            title: req.body.seriesTitle,
             volume: req.body.seriesVolume
         }
     }) 
@@ -69,7 +70,7 @@ router.post('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         const book = await Book.findById(req.params.id).populate('author').exec()
-        console.log(book)
+   
         res.render('books/show', { book: book })
     } catch {
         res.redirect('/')
@@ -97,9 +98,18 @@ router.put('/:id', async (req, res) => {
         book.publishDate = new Date(req.body.publishDate)
         book.pageCount = req.body.pageCount
         book.description = req.body.description
-        book.bookType = req.body.bookType,
-        book.bookGenre = req.body.bookGenre,
-        console.log(book)
+        book.bookType = req.body.bookType
+        book.bookGenre = req.body.bookGenre
+        
+        // Initialize bookSeries if it does not exist
+        if (book.bookSeries) {
+            console.log("successful")
+        }
+
+        // // Update bookSeries fields
+        // book.bookSeries.series = req.body.bookSeries.series || book.bookSeries.series
+        // book.bookSeries.volume = req.body.bookSeries.volume || book.bookSeries.volume
+     
         if (req.body.cover != null && req.body.cover != '') {
             saveCover(book, req.body.cover)
         }
@@ -108,10 +118,9 @@ router.put('/:id', async (req, res) => {
     } catch {
         if (book != null ) {
             renderEditPage(res, book, true)
-        } else {
+        } else {         
             redirect('/')
-        }
-        
+        }      
     }
 })
 
@@ -162,9 +171,9 @@ async function renderFormPage(res, book, form, hasError = false) {
                 params.errorMessage = 'Error Creating Book'
             }
          }
+  
         res.render(`books/${form}`, params)
-       } catch {
-        console.error(error)
+       } catch  {
         res.redirect('/books')
        }
 }
