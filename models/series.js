@@ -23,7 +23,6 @@ const seriesSchema = new mongoose.Schema({
 seriesSchema.pre("deleteOne", { document: true, query: false }, async function (next) {    
     try {     
         const books = await Book.find({ series: this._id }).exec();
-        console.log(books);
         if (books.length > 0) {
           next(new Error("This series has books still"));
         } else {

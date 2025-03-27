@@ -6,6 +6,7 @@
     <div class="form-item">
         <label>Author</label>
         <select name="author">
+            <option label="" value=""></option>
             <% authors.forEach(author => { %>
                 <option 
                     value="<%= author.id %>" 
@@ -55,14 +56,10 @@
         <select name="seriesId">
             <option label="" value=""></option>
             <% series.forEach(s => { %>
-                <option label="<%= s.id %> <%= s.title %>" value="<%= s.id %>" <%= book.bookSeries && book.bookSeries.series == s.id ? 'selected' : '' %>><%= s.title %></option>
+                <option label="<%= s.title %>" value="<%= s.id %>" <%= book.bookSeries && book.bookSeries.series == s.id ? 'selected' : '' %>><%= s.title %></option>
             <% }) %>
         </select>
     </div>
-    <div class="form-item hide">    
-        <label>Series Title</label>
-        <input type="text" name="seriesTitle" value>
-    </div> 
     <div class="form-item">
         <label>Volume</label>
         <input type="number" name="seriesVolume" min="1" value="<%= book.bookSeries ? book.bookSeries.volume : '' %>">

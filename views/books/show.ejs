@@ -24,10 +24,12 @@
             <div><%= book.description %></div>
         <% } %>
         <% if (book.bookSeries) { %>
-            <% if (book.bookSeries.series) { %>
+            <% if (book.bookSeries.title) { %>
                 <div class="book-details-label">Series:</div>
                 <div>
-                    <a href="/series/<%= book.bookSeries.series %>"><%= book.bookSeries.series %></a>
+                    <a href="/series/<%= book.bookSeries.series %>">                  
+                        <%= book.bookSeries.title %>                
+                    </a>
                 </div>
             <% } %>
             <% if (book.bookSeries.volume) { %>

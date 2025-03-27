@@ -53,9 +53,9 @@ router.post('/', async (req, res) => {
         }
     }) 
     saveCover(book, req.body.cover)
-    saveSeriesTitle(book, req.body.seriesTitle)
 
     try {
+        await updateSeriesTitle(book, req.body.seriesId)
         const newBook = await book.save()
         res.redirect(`books/${newBook.id}`)
     } catch {
@@ -97,13 +97,14 @@ router.put('/:id', async (req, res) => {
         book.bookType = req.body.bookType
         book.bookGenre = req.body.bookGenre
 
-        //Code for handling series update
+        // Code for handling series update
         if (!book.bookSeries) {     
             book.bookSeries = {}
         }
         book.bookSeries.series = req.body.seriesId || book.bookSeries.series
         book.bookSeries.volume = req.body.seriesVolume || book.bookSeries.volume
-
+        await updateSeriesTitle(book, req.body.seriesId)
+     
         if (req.body.cover != null && req.body.cover != '') {
             saveCover(book, req.body.cover)
         }
@@ -145,7 +146,6 @@ async function renderNewPage(res, book, hasError = false) {
 }
 
 async function renderEditPage(res, book, hasError = false) {
-    // console.log('Rendering edit page. Has error:', hasError)
     renderFormPage(res, book, 'edit', hasError)
 }
 
@@ -183,8 +183,13 @@ function saveCover(book, coverEncoded) {
    }
 }
 
-function saveSeriesTitle(book, seriesTitle){
-    console.log(book, seriesTitle)
+async function updateSeriesTitle(book, seriesId) {
+    if (book.bookSeries != null && seriesId) {
+        const series = await Series.findById(seriesId);
+        if (series) {
+            book.bookSeries.title = series.title;
+        }
+    }
 }
 
 module.exports = router
