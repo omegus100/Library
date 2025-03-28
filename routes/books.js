@@ -10,6 +10,7 @@ const { bookGenres } = require('../models/book')
 
 // All Books Route
 router.get('/', async (req, res) => {
+    console.log("test")
     let query = Book.find()
     if (req.query.title != null && req.query.title != '' ) {
         query = query.regex('title', new RegExp(req.query.title, 'i'))
