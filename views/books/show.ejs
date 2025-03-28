@@ -12,10 +12,10 @@
         <div class="book-details-label">Author:</div>
         <div><%= book.author.firstName %> <%= book.author.lastName %></div>
         <div class="book-details-label">Publish Date:</div>
-        <div><%= book.publishDate.toDateString() %></div>
+        <div><%= book.publishDate.toLocaleDateString() %></div>
         <div class="book-details-label">Page Count:</div>
         <div><%= book.pageCount %></div>
-        <div class="book-details-label">Book Type:</div>
+        <div class="book-details-label">Format:</div>
         <div><%= book.bookType %></div>
         <div class="book-details-label">Genre:</div>
         <div><%= book.bookGenre %></div>
