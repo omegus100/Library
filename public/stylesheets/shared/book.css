@@ -1,12 +1,28 @@
 :root {
     --book-cover-width: 200px;
     --book-cover-width-large: 325px;
+    /* --book-cover-width: 1rem;
+    --book-cover-width-large: 10rem; */
     --book-cover-aspect-ratio: 0.75;
 }
+
+/* .book-cover {
+    width: var(--book-cover-width);
+    height: calc(var(--book-cover-width) / var(--book-cover-aspect-ratio));
+} */
 
 .book-cover {
     width: var(--book-cover-width);
     height: calc(var(--book-cover-width) / var(--book-cover-aspect-ratio));
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1), /* Subtle shadow below */
+                0 1px 6cm rgba(0, 0, 0, 0.06); /* Lighter shadow for depth */
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for hover effects */
+}
+
+.book-cover:hover {
+    transform: translateY(-5px); /* Slightly lift the book cover on hover */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15), /* Stronger shadow on hover */
+                0 4px 12px rgba(0, 0, 0, 0.1); /* Additional depth */
 }
 
 .book-cover-large {
@@ -61,7 +77,7 @@
 }
 
 .book-details-title {
-    color: var(--color-text-light);
+    color: var(--color-text-dark);
     text-decoration: none;
     margin-top: 0.5rem; 
     font-size: 1rem; 
