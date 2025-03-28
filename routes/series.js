@@ -6,8 +6,12 @@ const Series = require('../models/series')
 
 // All Series Route
 router.get('/', async (req, res) =>{
+    let query = Series.find()
+    if (req.query.title != null && req.query.title != '' ) {
+        query = query.regex('title', new RegExp(req.query.title, 'i'))
+    }
     try {
-        const series = await Series.find({})
+        const series = await query.exec()
         res.render('series/index', {
             series: series,
             searchOptions: req.query
@@ -49,6 +53,75 @@ router.get('/:id', async (req, res) => {
             })
     } catch {
         res.redirect('/')
+    }
+})
+
+// Edit Series Route
+router.get('/:id/edit', async (req, res) => {
+    try {
+        const series = await Series.findById(req.params.id)
+        const authors = await Author.find({}) 
+        res.render('series/edit', { 
+            series: series, 
+            authors: authors 
+        })
+    } catch {
+        res.redirect('/series')
+    }
+    
+})
+
+// Update Series Route
+router.put('/:id', async (req, res) => {
+    let series
+    try {
+        series = await Series.findById(req.params.id)
+        series.title = req.body.title
+        series.author = req.body.author
+        await series.save()
+        res.redirect(`/series/${series.id}`)
+    } catch {
+        if (series == null){
+            res.redirect('/')
+        } else {
+            res.render('series/edit', {
+                series: series,
+                errorMessage: 'Error updating Series'
+              }) 
+        }  
+    }
+})
+
+// Delete Series Page
+router.delete('/:id', async (req, res) => {
+    let series
+
+    try {
+        series = await Series.findById(req.params.id)
+        await series.deleteOne()
+        res.redirect('/series')
+    } catch {
+        if (series == null){
+            res.redirect('/')
+        } else {
+            res.redirect(`/series/${series.id}`)
+        }
+    }
+})
+
+router.delete('/:id', async (req, res) => {
+    let author
+    try {
+        author = await Author.findById(req.params.id)
+        await author.deleteOne()
+        res.redirect('/authors')
+    } catch {
+        if (author == null){
+            res.redirect('/')
+        } else {
+            res.redirect(`/authors/${author.id}`)
+        }
+       
     }
 })
 

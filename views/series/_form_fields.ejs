@@ -6,16 +6,15 @@
     <div class="form-item">
         <label>Author</label>
         <select name="author">
-        <% authors.forEach(author => {%>
-         <% if (author.id === series.author) { %>
-            <option selected label="<%= author.firstName %> <%= author.lastName %>" value="<%= author.id %>">
-         <% } else { %>
-            <option label="<%= author.firstName %> <%= author.lastName %>" value="<%= author.id %>">
-         <% } %>     
-            </option>
-        <%}) %>
-        <!-- <option>Add Author</option> -->
+            <% authors.forEach(author => { %>
+                <option 
+                    value="<%= author.id %>" 
+                    <%= String(author.id) === String(series.author) ? 'selected' : '' %>>
+                    <%= author.firstName %> <%= author.lastName %>
+                </option>
+            <% }) %>
         </select>
     </div>
-
 </div>
+
+

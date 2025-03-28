@@ -2,11 +2,6 @@ const mongoose = require('mongoose')
 const Author = require('./author')
 const Book = require('./book')
 
-// const volumeSchema = new mongoose.Schema({ 
-//     name: String, 
-//     volume: Number 
-// })
-
 const seriesSchema = new mongoose.Schema({
   title: {
       type: String,
@@ -17,12 +12,11 @@ const seriesSchema = new mongoose.Schema({
         required: true,
         ref: 'Author'
     }
-    // books: [volumeSchema]
 })
 
 seriesSchema.pre("deleteOne", { document: true, query: false }, async function (next) {    
     try {     
-        const books = await Book.find({ series: this._id }).exec();
+        const books = await Book.find({ 'bookSeries.series': this._id }).exec()
         if (books.length > 0) {
           next(new Error("This series has books still"));
         } else {

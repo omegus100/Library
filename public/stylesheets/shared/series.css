@@ -1,7 +1,18 @@
+.series-details {
+    display: flex; 
+    margin-bottom: 1.5rem;
+}
+
 .series-details-grid {
     display: grid;
     align-content: flex-start;
     align-items: center;
     gap: 1rem;
     grid-template-columns: auto auto;
+}
+
+.series-details-label {
+    font-size: 1.2rem;
+    font-weight: 500;
+    align-self: flex-start;
 }

@@ -1,8 +1,7 @@
 <h2 class="page-header"><%= series.title %></h2>
-
-<div class="book-details">
+<div class="series-details">
     <div class="series-details-grid">
-        <div class="book-details-label">Author:</div>
+        <div class="series-details-label">Author:</div>
         <div>
             <a href="/authors/<%= series.author.id %>">
                 <%= series.author.firstName %> <%= series.author.lastName %>
@@ -10,7 +9,10 @@
         </div>
     </div>
 </div>
-<br>
+<div class="btn-row">
+    <a class="btn btn-primary" href="/series/<%= series.id %>/edit">Edit</a>
+    <%- include('../partials/deleteForm', { url: `/series/${series.id}`}) %>
+</div>
 <%  if (booksBySeries.length > 0 ) { %>
     <h2 class="page-header">Books in Series</h2>
     <%- include ('../partials/bookGrid', { books: booksBySeries }) %>

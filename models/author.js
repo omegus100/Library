@@ -15,7 +15,6 @@ const authorSchema = new mongoose.Schema({
 authorSchema.pre("deleteOne", { document: true, query: false }, async function (next) {    
     try {     
         const books = await Book.find({ author: this._id }).exec();
-        console.log(books);
         if (books.length > 0) {
           next(new Error("This author has books still"));
         } else {
