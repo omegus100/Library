@@ -1,13 +1,16 @@
 :root {
-    --color-btn-primary-background: hsl(var(--color-base-hue), 100%, 83%);
+    --color-btn-primary-background: #3376AE;
+    --color-btn-cancel-background: #FFFFFF;
     --color-btn-primary-background-dark: hsl(var(--color-base-hue), 100%, 73%);
-    --color-btn-primary-text: hsl(var(--color-base-hue), 100%, 20%);
+    --color-btn-primary-text: #FFFFFF;
+    --color-btn-cancel-text:  #3376AE;
     --color-btn-primary-text-dark: hsl(var(--color-base-hue), 100%, 10%);
     --color-btn-border: black;
     --color-btn-danger-background: hsl(var(--color-danger-hue), 100%, 83%);
     --color-btn-danger-background-dark: hsl(var(--color-danger-hue), 100%, 73%);
     --color-btn-danger-text: black;
     --color-btn-danger-text-dark: black;
+    --color-btn-primary-background-hover: hsl(var(--color-btn-primary-background), 100%, 90%);
 }
 
 .btn {
@@ -37,12 +40,25 @@
 .btn-primary {
     color: var(--color-btn-primary-text);
     background-color: var(--color-btn-primary-background);
+    border: 1px solid var(--color-btn-primary-background);
 
     &:hover {
         color: var(--color-btn-primary-text-dark);
-        background-color: var(--color-btn-primary-background-dark);
+        background-color: var(--color-btn-primary-background-hover);
     }
 }
+
+.btn-search {
+  color: var(--color-btn-primary-text-dark);
+  background-color: var(--color-btn-primary-background-hover);
+
+  &:hover {
+    color: var(--color-btn-primary-text);
+    background-color: var(--color-btn-primary-background);
+    border: 1px solid var(--color-btn-primary-background);
+  }
+}
+
 
 .btn-danger {
     color: var(--color-btn-danger-text);
@@ -52,5 +68,10 @@
         color: var(--color-btn-danger-text-dark);
         background-color: var(--color-btn-danger-background-dark);
     }
+}
+
+.btn-cancel {
+  color: var(--color-btn-cancel-text);
+  background-color: var(--color-btn-cancel-background);
 }
 

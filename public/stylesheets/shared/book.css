@@ -1,9 +1,10 @@
 :root {
     --book-cover-width: 200px;
     --book-cover-width-large: 325px;
-    /* --book-cover-width: 1rem;
-    --book-cover-width-large: 10rem; */
     --book-cover-aspect-ratio: 0.75;
+    --color-book-grid-link: var(--color-grid-link);
+     /* --book-cover-width: 1rem;
+    --book-cover-width-large: 10rem; */
 }
 
 /* .book-cover {
@@ -98,6 +99,10 @@
     gap: 1rem;
     grid-template-columns: auto auto;
     margin-left: 1rem;
+
+    a:visited {
+        color: var(--color-book-grid-link);
+    }
 }
 
 .book-details-btn-grid {

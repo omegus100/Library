@@ -1,3 +1,7 @@
+:root {
+    --color-series-grid-link: var(--color-grid-link);
+}
+
 .series-details {
     display: flex; 
     margin-bottom: 1.5rem;
@@ -9,6 +13,10 @@
     align-items: center;
     gap: 1rem;
     grid-template-columns: auto auto;
+
+    a:visited {
+        color: var(--color-series-grid-link);
+    }
 }
 
 .series-details-label {

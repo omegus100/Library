@@ -7,4 +7,5 @@
     --color-text-light:  hsl(var(--color-base-hue), 100%, 87%);
     --color-text-dark:  #333;
     --color-background-content: #ffffff;
+    --color-grid-link: #810F12;
 }
