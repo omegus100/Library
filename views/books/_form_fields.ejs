@@ -54,7 +54,7 @@
     <div class="form-item">
         <label>Series</label>
         <select name="seriesId">
-            <option label="" value=""></option>
+            <option label="" value></option>
             <% series.forEach(s => { %>
                 <option label="<%= s.title %>" value="<%= s.id %>" <%= book.bookSeries && book.bookSeries.series == s.id ? 'selected' : '' %>><%= s.title %></option>
             <% }) %>
