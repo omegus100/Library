@@ -1,4 +1,8 @@
-<h2 class="page-header">Search Authors</h2>
+<h2 class="page-header">Authors 
+    <span> 
+        <a href="/authors/new" class="btn btn-search" >Add</a>
+    </span>
+</h2>
 <form actions="/authors" method="GET">
     <div class="form-row">
         <div class="form-item">
@@ -17,7 +21,7 @@
 <br>
 <% authors.forEach(author => { %>      
     <div class="author-row">
-        <div class="author-name"><%= author.firstName %> <%= author.lastName %></div>
+        <div class="author-name"><a href="/authors/<%= author.id %>"><%= author.firstName %> <%= author.lastName %></a></div>
         <div class="btn-row">   
             <a class="btn btn-details" href="/authors/<%= author.id %>">View</a>
             <a class="btn btn-primary" href="/authors/<%= author.id %>/edit">Edit</a>
