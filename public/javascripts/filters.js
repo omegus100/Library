@@ -1,3 +1,4 @@
+
 // Function to remove "The" from titles that begin with it
 function filterTitles(books) {
     return books.map(book => {

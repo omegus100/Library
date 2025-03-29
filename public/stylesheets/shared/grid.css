@@ -1,0 +1,12 @@
+:root {
+    --grid-item-1: 100% - 1rem;
+    --grid-item-2: 50% - 1rem;
+    --grid-item-3: 33.33% - 1rem;
+    --grid-item-4: 25% - 1rem;
+    --grid-item-5: 20% - 1rem;
+    --grid-item-6: 16.67% - 1rem;
+    --grid-item-7: 14.29% - 1rem;
+    --grid-item-8: 12.5% - 1rem;
+    --grid-item-9: 11.11% - 1rem;
+    --grid-item-10: 10% - 1rem;
+}

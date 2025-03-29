@@ -10,7 +10,6 @@ const { bookGenres } = require('../models/book')
 
 // All Books Route
 router.get('/', async (req, res) => {
-    console.log("test")
     let query = Book.find()
     if (req.query.title != null && req.query.title != '' ) {
         query = query.regex('title', new RegExp(req.query.title, 'i'))
@@ -46,20 +45,24 @@ router.post('/', async (req, res) => {
         pageCount: req.body.pageCount,
         description: req.body.description,
         bookType: req.body.bookType,
-        bookGenre: req.body.bookGenre,
-        bookSeries: {
-            series: req.body.seriesId,
-            title: req.body.seriesTitle,
-            volume: req.body.seriesVolume
-        }
+        bookGenre: req.body.bookGenre
     }) 
+    if (req.body.seriesId || req.body.seriesVolume) {
+        book.bookSeries = {
+            series: req.body.seriesId || null,
+            title: req.body.seriesTitle || null,
+            volume: req.body.seriesVolume || null
+        }
+    }
     saveCover(book, req.body.cover)
 
     try {
         await updateSeriesTitle(book, req.body.seriesId)
         const newBook = await book.save()
         res.redirect(`books/${newBook.id}`)
-    } catch {
+    } catch (error) {
+        console.error('Error creating book:', error) // Log the error
+        console.error('Request body:', req.body) // Log the request body
         renderNewPage(res, book, true)
     }
 })
@@ -143,7 +146,12 @@ router.delete('/:id', async (req, res) => {
 })
 
 async function renderNewPage(res, book, hasError = false) {
-    renderFormPage(res, book, 'new', hasError)
+    try {
+        renderFormPage(res, book, 'new', hasError)
+    } catch (error) {
+        console.error('Error rendering new page:', error) // Log rendering errors
+        res.redirect('/books')
+    }
 }
 
 async function renderEditPage(res, book, hasError = false) {
@@ -170,8 +178,10 @@ async function renderFormPage(res, book, form, hasError = false) {
          }
   
         res.render(`books/${form}`, params)
-       } catch  {
+       } catch (error) {
+        console.error('Error rendering form page:', error) // Log rendering errors
         res.redirect('/books')
+    
        }
 }
 

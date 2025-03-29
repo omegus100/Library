@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 const bookTypes = ['Paperback','Hardback', 'eBook', 'Audiobook']
-const bookGenres = ["Biography", "Classics", "Fantasy", "Historical Fiction", "Horror", "Mystery", "Non-Fiction", "Romance", "Science Fiction", "Thriller", "Young Adult"]
+const bookGenres = ["Biography", "Classics", "Fantasy", "Historical Fiction", "Horror", "Mystery", "Non-Fiction", "Romance", "Science Fiction", "Thriller", "Young Adult", "Other"]
 
 
 const BookSeriesSchema = new mongoose.Schema({ 
@@ -18,43 +18,27 @@ const bookSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    description: {
-        type: String
-    },
-    publishDate: {
-        type: Date,
-        required: true
-    },
-    pageCount: {
-        type: Number,
-        required: true
-    },
+    description: String,
+    publishDate: Date,
+    pageCount: Number, 
     createdAt: {
         type: Date,
-        required: true,
         default: Date.now
     },
-    coverImage: {
+    coverImage:  {
         type: Buffer,
         required: true
     },
-    coverImageType: {
-        type: String,
-        required: true
-    },
+    coverImageType: String, 
     author: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
         ref: 'Author'
     },
-    bookSeries: {
-        type: BookSeriesSchema,
-        required: false
-    },
+    bookSeries: BookSeriesSchema, 
     bookType: {
         type: [String],
-        enum: bookTypes,
-        required: true
+        enum: bookTypes
     }, 
     bookGenre: {
         type: [String],

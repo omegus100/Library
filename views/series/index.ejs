@@ -1,4 +1,8 @@
-<h2 class="page-header">Search Series</h2>
+<h2 class="page-header">Series 
+    <span> 
+        <a href="/series/new" class="btn btn-search" >Add</a>
+    </span>
+</h2>
 <form actions="/series" method="GET">
     <div class="form-row">
         <div class="form-item">
@@ -7,19 +11,19 @@
         </div>
     </div> 
     <div class="form-row form-row-end">
-        <button class="btn btn-primary" type="submit">Search</button>
+        <button class="btn btn-search" type="submit">Search</button>
     </div>  
 </form>
 <br>
 <div>
     <% series.forEach(series => { %>          
         <div class="author-row">
-            <div class="author-name"><%= series.title %></div>
-            <div class="btn-row">   
-                <a class="btn btn-primary" href="/series/<%= series.id %>">View</a>
+            <div class="author-name"><a href="/series/<%= series.id %>"><%= series.title %></a></div>
+            <!-- <div class="btn-row">   
+                <a class="btn btn-details" href="/series/<%= series.id %>">View</a>
                 <a class="btn btn-primary" href="/series/<%= series.id %>/edit">Edit</a>
                 <%- include('../partials/deleteForm', { url: `/series/${series.id}`}) %>
-            </div>
+            </div> -->
         </div>
     <% }) %>
 </div>
