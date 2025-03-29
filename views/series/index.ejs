@@ -18,12 +18,12 @@
 <div>
     <% series.forEach(series => { %>          
         <div class="author-row">
-            <div class="author-name"><%= series.title %></div>
-            <div class="btn-row">   
+            <div class="author-name"><a href="/series/<%= series.id %>"><%= series.title %></a></div>
+            <!-- <div class="btn-row">   
                 <a class="btn btn-details" href="/series/<%= series.id %>">View</a>
                 <a class="btn btn-primary" href="/series/<%= series.id %>/edit">Edit</a>
                 <%- include('../partials/deleteForm', { url: `/series/${series.id}`}) %>
-            </div>
+            </div> -->
         </div>
     <% }) %>
 </div>

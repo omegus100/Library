@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 const bookTypes = ['Paperback','Hardback', 'eBook', 'Audiobook']
-const bookGenres = ["Biography", "Classics", "Fantasy", "Historical Fiction", "Horror", "Mystery", "Non-Fiction", "Romance", "Science Fiction", "Thriller", "Young Adult"]
+const bookGenres = ["Biography", "Classics", "Fantasy", "Historical Fiction", "Horror", "Mystery", "Non-Fiction", "Romance", "Science Fiction", "Thriller", "Young Adult", "Other"]
 
 
 const BookSeriesSchema = new mongoose.Schema({ 
