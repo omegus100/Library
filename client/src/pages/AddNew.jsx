@@ -171,6 +171,7 @@ export default function AddNewBook() {
                     Search
                 </button>
             </div>
+            {/* <p>Enter your title and click Search to retrieve results.</p> */}
             <div>
                 {books.map((book, index) => (
                     <div key={index} style={{ border: '1px solid #ccc', margin: '10px', padding: '10px' }}>
