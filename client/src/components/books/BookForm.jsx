@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
+
 import * as bookObjects from './bookObjects'
 import { GetData } from '../../hooks/getData'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -45,7 +46,7 @@ export default function BookForm({ setBooks }) {
                 seriesTitle: book.series?.title || '',
                 seriesId: book.series?.id || '',
                 seriesVolume: book.series?.volume || '',
-                coverImagePath: book.coverImagePath || '/no_book_cover_available.svg',
+                coverImagePath: book.coverImagePath,
                 publisher: book.publisher || '',
                 isbn: book.isbn || '',
                 readingStatus: book.readingStatus || ''   
@@ -95,14 +96,14 @@ export default function BookForm({ setBooks }) {
                     coverImagePath: reader.result
                 }))
             }
-        } else {
-            console.warn('Invalid file or no file selected. Using default cover image.')
-            // Set the default cover image if no valid file is uploaded
-            setFormData((prevData) => ({
-                ...prevData,
-                coverImagePath: '/no_book_cover_available.svg'
-            }))
-        }
+        // } else {
+        //     console.warn('Invalid file or no file selected. Using default cover image.')
+        //     // Set the default cover image if no valid file is uploaded
+        //     setFormData((prevData) => ({
+        //         ...prevData,
+        //         coverImagePath: '/no_book_cover_available.svg'
+        //     }))
+         }
     }
 
     const handleSubmit = (event) => {
@@ -110,7 +111,7 @@ export default function BookForm({ setBooks }) {
 
         const finalFormData = {
             ...formData,
-            coverImagePath: formData.coverImagePath || '/no_book_cover_available.svg' // Apply default value
+            coverImagePath: formData.coverImagePath 
         }
 
         handleFormSubmit({
@@ -130,7 +131,7 @@ export default function BookForm({ setBooks }) {
         { label: "Page Count", name: "pageCount", type: "number", component: "TextInput" },
         { label: "Format", name: "format", component: "SelectInput", options: bookObjects.formats },
         { label: "Genres", name: "genres", component: "SelectInput", options: bookObjects.genres },
-        { label: "Author", name: "authorId", component: "SelectInput", options: authors, customHandler: updateAuthorInfo },
+        { label: "Author", name: "authorId", component: "SelectInput", options: authors, customHandler: updateAuthorInfo, link: '/authors/new', linkText: 'Add New Author' },
         { label: "Series", name: "seriesId", component: "SelectInput", options: series, customHandler: updateSeriesInfo },
         { label: "Series Volume", name: "seriesVolume", type: "number", component: "TextInput" },
         { label: "Publisher", name: "publisher", type: "text", component: "TextInput" },
@@ -184,6 +185,8 @@ export default function BookForm({ setBooks }) {
                                         handleInputChange(event)
                                         if (field.customHandler) field.customHandler(value)
                                     }}
+                                    link={field.link}
+                                    linkText={field.linkText}
                                 />
                             )
                         case "FileUploader":
@@ -200,9 +203,9 @@ export default function BookForm({ setBooks }) {
                 })}
             <SubmitButton isEditing={!!id} object="Book" />
             </form>
-            {authorsError && <p>Error fetching authors: {authorsError.message}</p>}
+            {/* {authorsError && <p>Error fetching authors: {authorsError.message}</p>}
             {seriesError && <p>Error fetching series: {seriesError.message}</p>}
-            {bookError && <p>Error fetching book: {bookError.message}</p>}
+            {bookError && <p>Error fetching book: {bookError.message}</p>} */}
         </>
     )
 }

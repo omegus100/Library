@@ -8,6 +8,7 @@ import SortOptions from '../components/SortOptions'
 import ListLayout from '../components/PageLayouts'
 import { Loading } from '../components/Icons'
 import { TabMenu } from '../components/Headings'
+import  NoContentFound  from '../components/NoContent' 
 
 const Authors = () => {
     const { data: authors, error, isLoading } = GetData('authors')
@@ -39,9 +40,9 @@ const Authors = () => {
             return <Loading /> 
     }
 
-    if (error) {
-        return <p>Error fetching authors: {error.message}</p>
-    }
+    // if (error) {
+    //     return <p>Error fetching authors: {error.message}</p>
+    // }
 
     return (
         <>
@@ -63,8 +64,12 @@ const Authors = () => {
                     <AddButton />               
                 </Link> 
             </div>
-        
-            <ListLayout authors={sortedAuthors} sortBy={sortBy}/>  
+
+            {error ? (
+                <NoContentFound element={`authors`}/>
+            ) : (
+                <ListLayout authors={sortedAuthors} sortBy={sortBy}/>  
+                )}  
         </>
     )
 }

@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import { GoBackButton } from '../components/Buttons'
 
 const FormHeader = ({ isEditing }) => {
@@ -23,7 +24,7 @@ const SearchInput = ({ type = 'text', value, onChange, placeholder, className })
   </>
 )
 
-const SelectInput = ({ label, name, value, options, onChange, placeholder = `Select ${label}` }) => (
+const SelectInput = ({ label, name, value, options, onChange, placeholder = `Select ${label}`, link, linkText }) => (
   <>
       <label htmlFor={name}>{label}:</label>
       <select name={name} value={value} onChange={onChange}>
@@ -37,6 +38,12 @@ const SelectInput = ({ label, name, value, options, onChange, placeholder = `Sel
               </option>
           ))}
       </select>
+
+      {link && (
+          <Link to={link}>
+              {linkText ? linkText : `Add New ${label}`}
+          </Link>
+      )}
       <br />
   </>
 )
@@ -51,7 +58,7 @@ const TextInput = ({ label, name, type = 'text', value, onChange, placeholder })
           value={value}
           onChange={onChange}
           placeholder={placeholder ? placeholder : `Enter ${label}`}
-      />
+      />  
       <br />
   </>
 )

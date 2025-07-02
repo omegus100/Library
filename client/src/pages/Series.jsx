@@ -8,6 +8,7 @@ import SortOptions from '../components/SortOptions'
 import {TableLayout} from '../components/PageLayouts'
 import { Loading } from '../components/Icons'
 import { TabMenu } from '../components/Headings'
+import  NoContentFound  from '../components/NoContent'
 
 const Series = () => {
     const { data: series, error, isLoading } = GetData('series')
@@ -54,10 +55,6 @@ const Series = () => {
         return <Loading /> 
     }
 
-    if (error) {
-        return <p>Error fetching series: {error.message}</p>
-    }
-
     return (
         <>
             {/* <div className={styles.indexHeader}>
@@ -78,8 +75,12 @@ const Series = () => {
                     <AddButton />               
                 </Link>
             </div>     
-          
-            <TableLayout series={sortedSeries} />
+
+            {error ? (
+                <NoContentFound element={`series`}/>
+            ) : (
+                <TableLayout series={sortedSeries} />
+            )}
         </>
     )
 }

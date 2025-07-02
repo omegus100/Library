@@ -8,6 +8,7 @@ import SortOptions from '../components/SortOptions'
 import BookCover from '../components/books/BookCover'
 import { Loading } from '../components/Icons'
 import { TabMenu } from '../components/Headings'
+import  NoContentFound  from '../components/NoContent'
 
 const Books = () => {
     const { data: books, error, isLoading } = GetData('books')
@@ -71,10 +72,6 @@ const Books = () => {
         return <Loading /> 
     }
 
-    if (error) {
-        return <p>Error fetching books: {error.message}</p>
-    }
-
     return (
         <>
         
@@ -91,7 +88,11 @@ const Books = () => {
                 <SortOptions sortBy={sortBy} setSortBy={setSortBy} object="book" className={styles.sortContainer}/> 
                 <AddButtonDropdown mainText="Add New" options={dropdownOptions} />
             </div>
-            
+
+            {error ? (
+                <NoContentFound element={`books`}/>
+            ) : (
+                
             <BookCover 
                 books={sortedBooks} 
                 subtitle={(book) => {
@@ -118,6 +119,8 @@ const Books = () => {
                     }
                 }}
             />
+            )}
+           
         </>
     )
 }

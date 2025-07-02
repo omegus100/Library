@@ -104,8 +104,8 @@ export default function SeriesForm({ setSeries }) {
             )}
         <SubmitButton isEditing={!!id} object="Series" />
         </form>
-        {authorsError && <p>Error fetching authors: {authorsError.message}</p>}
-        {seriesError && <p>Error fetching series: {seriesError.message}</p>}
+        {/* {authorsError && <p>Error fetching authors: {authorsError.message}</p>}
+        {seriesError && <p>Error fetching series: {seriesError.message}</p>} */}
         </>
     )
 }
