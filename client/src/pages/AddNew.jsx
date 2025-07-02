@@ -8,6 +8,7 @@ export default function AddNewBook() {
     const [books, setBooks] = useState([]) // State to store books mapped to bookSchema
     const [searchQuery, setSearchQuery] = useState('') // State to store the search query
     const [editStates, setEditStates] = useState({}) // State to track edit mode for each book
+    const API_URL = process.env.REACT_APP_API_URL || '' // Use environment variable for backend API URL
 
     const fetchBooks = async () => {
         try {
@@ -85,7 +86,7 @@ export default function AddNewBook() {
     const findMatchingAuthor = async (book) => {
         try {
             // Fetch all authors from the backend
-            const response = await axios.get('/api/authors')
+            const response = await axios.get(`${API_URL}/api/authors`)
             const authors = response.data
 
             // Find a matching author
@@ -113,7 +114,7 @@ export default function AddNewBook() {
     const addNewAuthor = async (book) => {
         try {
             // Create a new author using book.authorFirstName and book.authorLastName
-            const response = await axios.post('/api/authors', {
+            const response = await axios.post(`${API_URL}/api/authors`, {
                 firstName: book.authorFirstName,
                 lastName: book.authorLastName
             })
@@ -136,7 +137,7 @@ export default function AddNewBook() {
             const updatedBook = await findMatchingAuthor(book)
     
             // Add the updated book to the backend
-            const response = await axios.post('/api/books', updatedBook)
+            const response = await axios.post(`${API_URL}/api/books`, updatedBook)
             alert('Book added successfully!')
         } catch (error) {
             console.error('Error handling form submission:', error)
