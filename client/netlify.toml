@@ -3,11 +3,4 @@
   command = "npm run build"
   publish = "build"
 
-[environment]
-  # Do NOT put secrets here! Set REACT_APP_API_URL in Netlify dashboard instead.
 
-[[redirects]]
-  from = "/api/*"
-  to = process.env.REACT_APP_API_URL
-  status = 200
-  force = true
