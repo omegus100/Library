@@ -48,4 +48,3 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
 // console.log that your server is up and running
 app.listen(port, () => console.log(`Listening on port ${port}`))
-app.listen(3001, () => console.log('Proxy server running on port 3001'))

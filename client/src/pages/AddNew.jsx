@@ -4,6 +4,9 @@ import styles from '../stylesheets/Index.module.css'
 import { SearchInput, TextInput, TextAreaInput } from '../components/FormOptions'
 import FileUploader from '../components/FileUpload' // Assuming you have a file uploader component
 
+// Get API base URL from environment variables
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000'
+
 export default function AddNewBook() {
     const [books, setBooks] = useState([]) // State to store books mapped to bookSchema
     const [searchQuery, setSearchQuery] = useState('') // State to store the search query
@@ -60,7 +63,7 @@ export default function AddNewBook() {
     const convertUrlToBase64 = async (url) => {
         try {
             // const response = await fetch(url)
-            const response = await fetch(`http://localhost:3000/proxy?url=${encodeURIComponent(url)}`)
+            const response = await fetch(`${API_BASE_URL}/proxy?url=${encodeURIComponent(url)}`)
             const blob = await response.blob()
     
             return new Promise((resolve, reject) => {
@@ -85,7 +88,7 @@ export default function AddNewBook() {
     const findMatchingAuthor = async (book) => {
         try {
             // Fetch all authors from the backend
-            const response = await axios.get(`/api/authors`)
+            const response = await axios.get(`${API_BASE_URL}/api/authors`)
             const authors = response.data
 
             // Find a matching author
@@ -113,7 +116,7 @@ export default function AddNewBook() {
     const addNewAuthor = async (book) => {
         try {
             // Create a new author using book.authorFirstName and book.authorLastName
-            const response = await axios.post(`/api/authors`, {
+            const response = await axios.post(`${API_BASE_URL}/api/authors`, {
                 firstName: book.authorFirstName,
                 lastName: book.authorLastName
             })
@@ -136,7 +139,7 @@ export default function AddNewBook() {
             const updatedBook = await findMatchingAuthor(book)
     
             // Add the updated book to the backend
-            const response = await axios.post(`/api/books`, updatedBook)
+            const response = await axios.post(`${API_BASE_URL}/api/books`, updatedBook)
             alert('Book added successfully!')
         } catch (error) {
             console.error('Error handling form submission:', error)

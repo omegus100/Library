@@ -1,5 +1,8 @@
 import axios from 'axios';
 
+// Get API base URL from environment variables
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000'
+
 export const handleFormSubmit = async ({
     endpoint,
     id,
@@ -19,7 +22,7 @@ export const handleFormSubmit = async ({
         // Check if id is provided to determine if we're updating or creating
         if (id) { 
             // Update existing item (book, author, series)
-            response = await axios.put(`${endpoint}/${id}`, filteredFormData);
+            response = await axios.put(`${API_BASE_URL}${endpoint}/${id}`, filteredFormData);
             if (setItems) {
                 setItems((prevItems) =>
                     prevItems.map((item) => (item._id === id ? response.data : item))
@@ -27,7 +30,7 @@ export const handleFormSubmit = async ({
             }
         } else {
             // Create new item (book, author, series)
-            response = await axios.post(endpoint, filteredFormData);
+            response = await axios.post(`${API_BASE_URL}${endpoint}`, filteredFormData);
             if (setItems) {
                 setItems((prevItems) => [...prevItems, response.data]);
             }

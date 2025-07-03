@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
+// Get API base URL from environment variables
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000'
+
 // Reusable hook to fetch data (list or single item)
 export function GetData(object, id = null) {
     const [data, setData] = useState(id ? null : []) // Default to an empty array for lists
@@ -11,7 +14,7 @@ export function GetData(object, id = null) {
         const fetchData = async () => {
             setIsLoading(true) // Set loading to true before fetching
             try {
-                const endpoint = id ? `/api/${object}/${id}` : `/api/${object}` // Determine endpoint based on id
+                const endpoint = id ? `${API_BASE_URL}/api/${object}/${id}` : `${API_BASE_URL}/api/${object}` // Determine endpoint based on id
                 const response = await axios.get(endpoint)
                 setData(response.data)
             } catch (err) {
@@ -31,7 +34,7 @@ export function GetData(object, id = null) {
 // Custom hook to fetch id data from the API
 export const GetDataById = async (object, id) => {
     try {
-        const response = await axios.get(`/api/${object}/${id}`)
+        const response = await axios.get(`${API_BASE_URL}/api/${object}/${id}`)
         return response.data // Return the data for the specific object
     } catch (error) {
         console.error('Error fetching data by ID:', error)
@@ -48,7 +51,7 @@ export function GetBookObjectData(object) {
         const fetchObjectData = async () => {
             setIsLoading(true) // Set loading to true before fetching
             try {
-                const response = await axios.get(`/api/books`) // Fetch all books
+                const response = await axios.get(`${API_BASE_URL}/api/books`) // Fetch all books
                 const books = response.data
 
                 // Extract unique values for the specified object (e.g., genres, format)

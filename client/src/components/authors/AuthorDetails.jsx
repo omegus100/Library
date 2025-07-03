@@ -5,6 +5,9 @@ import { GetData } from '../../hooks/getData'
 import BookCover from '../books/BookCover'
 import axios from 'axios'
 
+// Get API base URL from environment variables
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000'
+
 export default function AuthorDetails() {
     const { id } = useParams() // Get the author ID from the URL
     const navigate = useNavigate()
@@ -31,7 +34,7 @@ export default function AuthorDetails() {
                 alert('This author has book(s) assigned to it. Please delete the book(s) first.')
                 return
             } else {
-                await axios.delete(`/api/authors/${id}`) // Call the DELETE route
+                await axios.delete(`${API_BASE_URL}/api/authors/${id}`) // Call the DELETE route
                 alert('Author deleted successfully') // Notify the user
                 navigate('/authors') // Redirect to the authors list page
             }
