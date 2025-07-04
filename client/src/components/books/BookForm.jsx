@@ -120,7 +120,7 @@ export default function BookForm({ setBooks }) {
             formData: finalFormData,
             setItems: setBooks,
             successMessage: id ? 'Book updated successfully!' : 'Book created successfully!',
-            navigateTo: '/books',
+            navigateTo: '/library',
             navigate,
         })
     }
