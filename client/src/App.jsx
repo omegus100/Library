@@ -17,6 +17,7 @@ import SeriesDetails from './components/series/SeriesDetails'
 import AddNew from './pages/AddNew.jsx'
 import BookObjects from './pages/BookObjects.jsx'
 import Settings from './pages/Settings.jsx'
+import ProductForm from './components/products/ProductForm.jsx'
 
 import Products from './pages/Products.jsx'
 import Cycles from './pages/Cycles.jsx'
@@ -49,6 +50,7 @@ export default function App() {
                     <Route path="books/new/search" element={<AddNew />} />  
                     <Route path="settings" element={<Settings />} />
                     <Route path="products" element={<Products />} />
+                    <Route path="products/new" element={<ProductForm />} />
                     <Route path="cycles" element={<Cycles />} />
                 </Route>
             </Routes>

@@ -10,19 +10,19 @@ const productSchema = new mongoose.Schema({
         required: true
     },
     description: String,
-    qty: Number, 
-    createdAt: {
-        type: Date,
-        required: true,
-        default: Date.now
-    },
-    Cycle: {
-        id: { type: mongoose.Schema.Types.ObjectId, ref: 'Cycle' },
-        title: String
-    }
+    qty: Number
+    // createdAt: {
+    //     type: Date,
+    //     required: true,
+    //     default: Date.now
+    // },
+    // Cycle: {
+    //     id: { type: mongoose.Schema.Types.ObjectId, ref: 'Cycle' },
+    //     title: String
+    // }
     // Bin: {
     //     id: { type: mongoose.Schema.Types.ObjectId, ref: 'Bin'},
     // },
 })
 
-module.exports = mongoose.model('product', productSchema)
+module.exports = mongoose.model('Product', productSchema)

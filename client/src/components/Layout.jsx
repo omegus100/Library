@@ -13,7 +13,8 @@ export default function Layout() {
                         <li><Link to="/library">Library</Link></li>
                         <li><Link to="/products">Inventory</Link></li>
                         <li><Link to="/cycles">Stock Counts</Link></li>
-                        <li><Link to="/books/new/search">Search</Link></li>
+                        <li><Link to="/products/new">Add Products</Link></li>
+               
                         <li><Link to="/settings">Settings</Link></li>
                     </ul>
                 </nav>

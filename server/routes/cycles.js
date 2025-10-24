@@ -3,7 +3,6 @@ const router = express.Router()
 const cycle = require('../models/cycle')
 const imageMimeTypes = ['image/jpeg', 'image/png', 'image/gif']
 const upload = require('../models/multer')
-const { readingStatus } = require('../../client/src/components/cycles/cycleObjects')
 
 // Get all cycle objects
 router.get('/', async (req, res) => {
