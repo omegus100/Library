@@ -25,9 +25,6 @@ const bookRouter = require('./routes/books')
 const authorRouter = require('./routes/authors')
 const seriesRouter = require('./routes/series')
 
-const productRouter = require('./routes/products')
-const cycleRouter = require('./routes/cycles')
-
 // Proxy route to fetch images from external URLs
 app.get('/proxy', async (req, res) => {
   const { url } = req.query; // Get the URL to proxy from the query parameter
@@ -42,9 +39,6 @@ app.get('/proxy', async (req, res) => {
       res.status(500).send('Error fetching image');
   }
 })
-
-app.use('/api/products', productRouter)
-app.use('/api/cycles', cycleRouter)
 
 app.use('/api/books', bookRouter) 
 app.use('/api/authors', authorRouter)

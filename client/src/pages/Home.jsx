@@ -53,107 +53,111 @@ export default function Home() {
 
           <section className="homepage-section">
             <div className="grid-card-container">
-            <div className="grid-card card-purple-blue">
+              <div className="grid-card card-purple-blue">
                 <div></div>
-                <div>
-                  <div className="grid-card-title">{totalBooks}</div>
-                  <div className="grid-card-subtitle">Total Books</div>
-                </div>
-            </div>
-            <div className="grid-card card-salmon-pink">
+                <Link to="/library">
+                  <div>
+                    <div className="grid-card-title">{totalBooks}</div>
+                    <div className="grid-card-subtitle">Total Books</div>
+                  </div>
+                </Link>
+              </div>
+              <div className="grid-card card-salmon-pink">
                 <div></div>
-                <div>
-                  <div className="grid-card-title">{authors.length}</div>
-                  <div className="grid-card-subtitle">Total Authors</div>
-                </div>
-            </div>
-            <div className="grid-card card-blue-green">
+                <Link to="/authors">
+                  <div>
+                    <div className="grid-card-title">{authors.length}</div>
+                    <div className="grid-card-subtitle">Total Authors</div>
+                  </div>
+                </Link>
+              </div>
+              <div className="grid-card card-blue-green">
                 <div></div>
                 <div>
                   <div className="grid-card-title">{finishedBooksCount}</div>
                   <div className="grid-card-subtitle">Books Read</div>
                 </div>
+              </div>
             </div>
+          </section>
+
+          <section>
+            <h2>New Books</h2>
+            <div className="homepage-container">
+              <BookCover
+                books={recentBooks}
+                subtitle={(book) =>
+                  `${book.author.firstName} ${book.author.lastName}`
+                }
+              />
             </div>
-        </section>
+          </section>
 
-      <section>     
-        <h2>New Books</h2> 
-        <div className="homepage-container">
-          <BookCover
-            books={recentBooks}
-            subtitle={(book) =>
-              `${book.author.firstName} ${book.author.lastName}`
-            }
-          />
-        </div>
-      </section>
+          <section className="homepage-section">
+            <h2>Books by Genre</h2>
+            <div className="book-grid">
+              <div className="grid-card-container">
+                {genres.map((genre, index) => {
+                  const genreName = genre.toLowerCase();
+                  return (
+                    <Link to={`/genres/${genreName}`}>
+                      <div className="grid-card" key={index}>
 
-      <section className="homepage-section">
-        <h2>Books by Genre</h2>
-        <div className="book-grid">
-          <div className="grid-card-container">
-            {genres.map((genre, index) => {
-              const genreName = genre.toLowerCase();
-              return (
-                 <Link to={`/genres/${genreName}`}>
-                <div className="grid-card" key={index}>
-                 
-                    <div>
-                      <span>{genre}</span>
-                    </div>
-              
-                </div>
-                   </Link> 
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      <section className="homepage-section">
-        <h2>Books by Format</h2>
-        <div className="book-grid">
-            <div className="grid-card-container">
-                {formats.map((format, index) => {
-                return (
-                   <Link to={`/format/${format}`}>
-                    <div className="grid-card">
-                   
                         <div>
-                        <span>{format}</span>
+                          <span>{genre}</span>
                         </div>
-                  
-                    </div>
-                      </Link>
-                );
+
+                      </div>
+                    </Link>
+                  );
                 })}
+              </div>
             </div>
+          </section>
+
+          <section className="homepage-section">
+            <h2>Books by Format</h2>
+            <div className="book-grid">
+              <div className="grid-card-container">
+                {formats.map((format, index) => {
+                  return (
+                    <Link to={`/format/${format}`}>
+                      <div className="grid-card">
+
+                        <div>
+                          <span>{format}</span>
+                        </div>
+
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
-      </section>
+          </section>
 
         </div>
-      <div className="homepage-sidebar">   
-        <div>
-          <h2>Currently Reading</h2>
-          {/* <div> {currentBooksCount}</div> */}
+        <div className="homepage-sidebar">
           <div>
-            {books.filter((book) => book.readingStatus === "Currently Reading").map((book, index) => {
-              return (
-                <div key={index} className="book-card">
-                  <img src={book.coverImagePath} alt={book.title} />
-                  <div>{book.title}</div>
-                  <span>{book.author.firstName} {book.author.lastName}</span>
-                </div>
-              );
-            } )}
+            <h2>Currently Reading</h2>
+            {/* <div> {currentBooksCount}</div> */}
+            <div>
+              {books.filter((book) => book.readingStatus === "Currently Reading").map((book, index) => {
+                return (
+                  <div key={index} className="book-card">
+                    <img src={book.coverImagePath} alt={book.title} />
+                    <div>{book.title}</div>
+                    <span>{book.author.firstName} {book.author.lastName}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>  
-      </div>
+        </div>
 
       </div>
 
-      
+
 
       {/* Search and Filter */}
       {/* <section>
@@ -166,9 +170,9 @@ export default function Home() {
             </section> */}
 
       {/* Book Highlights */}
-   
 
-      
+
+
 
       {/* Genres Section */}
       {/* <section>
