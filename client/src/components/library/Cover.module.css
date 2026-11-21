@@ -1,0 +1,39 @@
+.cover {
+    display: block;
+    aspect-ratio: 2 / 3;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-cover);
+    object-fit: cover;
+    background: var(--color-chip);
+}
+
+.md {
+    width: 100%;
+}
+
+.sm {
+    width: 48px;
+    flex: none;
+    border-radius: 4px;
+}
+
+.placeholder {
+    color: #FFFFFF;
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+}
+
+.placeholderTitle {
+    font-weight: var(--weight-bold);
+    font-size: var(--text-lg);
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+.placeholderAuthor {
+    font-size: 12px;
+    opacity: 0.9;
+}

@@ -1,0 +1,127 @@
+.page {
+    max-width: 760px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.title {
+    margin: 0;
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-bold);
+    letter-spacing: -0.02em;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-5);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+}
+
+.h2 {
+    margin: 0;
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+}
+
+.h3 {
+    margin: 0;
+    font-size: var(--text-md);
+    font-weight: var(--weight-semibold);
+}
+
+.block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.block + .block {
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border);
+}
+
+.muted {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+}
+
+.row {
+    display: flex;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    max-width: 420px;
+}
+
+.textButton {
+    align-self: flex-start;
+    border: 0;
+    background: none;
+    padding: 6px 0;
+    color: var(--color-accent);
+    font-size: var(--text-sm);
+    cursor: pointer;
+}
+
+.segment {
+    display: flex;
+    align-self: flex-start;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.segmentButton {
+    min-height: 40px;
+    padding: 0 var(--space-4);
+    border: 0;
+    background: transparent;
+    color: var(--color-text);
+    font-size: var(--text-sm);
+    cursor: pointer;
+}
+
+.segmentButton + .segmentButton {
+    border-left: 1px solid var(--color-border-strong);
+}
+
+.segmentButton[aria-checked="true"] {
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+}
+
+.links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+}
+
+.preview {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--color-chip);
+}
+
+.preview p {
+    margin: 0;
+}
+
+.previewList {
+    margin: 0;
+    padding-left: var(--space-5);
+    font-size: var(--text-sm);
+}

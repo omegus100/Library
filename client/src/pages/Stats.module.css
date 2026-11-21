@@ -1,0 +1,254 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    max-width: 960px;
+}
+
+.titleRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+}
+
+.title {
+    margin: 0;
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-bold);
+    letter-spacing: -0.02em;
+}
+
+.select {
+    min-height: 40px;
+    padding: 0 var(--space-3);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+}
+
+.muted {
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+    margin: 0;
+}
+
+.tiles {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+}
+
+.tile,
+.card {
+    padding: var(--space-5);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+}
+
+.tile {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.tileValue {
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-bold);
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+}
+
+.tileLabel {
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.cardHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.h2 {
+    margin: 0;
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+}
+
+.textButton {
+    border: 0;
+    background: none;
+    color: var(--color-accent);
+    font-size: var(--text-sm);
+    cursor: pointer;
+    min-height: 36px;
+}
+
+.goalForm {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+}
+
+.goalInput {
+    width: 100px;
+    min-height: var(--control-height);
+    padding: 0 var(--space-3);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+}
+
+.goalText {
+    margin: 0;
+}
+
+.goalBar {
+    height: 10px;
+    border-radius: var(--radius-pill);
+    background: var(--color-chip);
+    overflow: hidden;
+}
+
+.goalBar span {
+    display: block;
+    height: 100%;
+    border-radius: var(--radius-pill);
+    background: var(--color-chart);
+}
+
+/* Monthly bars: thin marks, rounded data end, anchored to the baseline */
+.chart {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 2px;
+    align-items: end;
+    height: 200px;
+    padding-top: var(--space-2);
+}
+
+.col {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.value {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+    min-height: 16px;
+}
+
+.barTrack {
+    flex: 1;
+    width: 100%;
+    max-width: 28px;
+    display: flex;
+    align-items: flex-end;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.bar {
+    display: block;
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+    background: var(--color-chart);
+    min-height: 0;
+}
+
+.col:hover .bar {
+    opacity: 0.85;
+}
+
+.month {
+    font-size: 11px;
+    color: var(--color-text-muted);
+}
+
+.finishedList {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.finishedList li + li {
+    border-top: 1px solid var(--color-border);
+}
+
+.finishedRow {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) 0;
+    color: var(--color-text);
+    text-decoration: none;
+    flex-wrap: wrap;
+}
+
+.finishedRow:hover .finishedTitle {
+    text-decoration: underline;
+}
+
+.finishedTitle {
+    font-weight: var(--weight-semibold);
+}
+
+.finishedMeta {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.twoCol {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+}
+
+.kv {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.kv li {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--color-border);
+    font-size: var(--text-sm);
+}
+
+.kv li:last-child {
+    border-bottom: 0;
+}
+
+.kv strong {
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 700px) {
+    .tiles,
+    .twoCol {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .chart {
+        height: 160px;
+    }
+    .month {
+        font-size: 10px;
+    }
+}

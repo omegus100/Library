@@ -1,101 +1,84 @@
 const express = require('express')
-const router = express.Router()
 const Series = require('../models/series')
+const Author = require('../models/author')
+const Book = require('../models/book')
+const { requireOwner } = require('../lib/auth')
 
-// Get all series objects
+const router = express.Router()
+
+const fail = (res, err, message) => {
+    if (err.name === 'ValidationError' || err.name === 'CastError') return res.status(400).json({ message: err.message })
+    console.error(message, err)
+    res.status(500).json({ message })
+}
+
+const authorFor = async (authorId) => {
+    if (!authorId) return undefined
+    const a = await Author.findById(authorId).lean()
+    return a ? { id: a._id, firstName: a.firstName, lastName: a.lastName } : undefined
+}
+
+// GET /api/series
 router.get('/', async (req, res) => {
     try {
-        const series = await Series.find({})
-        res.json(series)
+        res.json(await Series.find({}).sort({ title: 1 }).lean())
     } catch (err) {
-        res.status(500).json({ message: err.message })
+        fail(res, err, 'Failed to list series')
     }
 })
 
-// Create Series Route
-router.post('/', async (req, res) => {
-    const series = new Series({
-        title: req.body.title,
-        author: {
-            id: req.body.authorId,
-            firstName: req.body.authorFirstName,
-            lastName: req.body.authorLastName
-        }
-    }) 
-
-    try {
-        const newSeries = await series.save()
-        res.status(201).json(newSeries) // Send the newly created series object as a response
-    } catch (err) {
-        console.error('Error saving series:', err) // Log the error for debugging
-        res.status(500).json({ message: 'Failed to save series' }) // Send a 500 response with an error message
-    }
-})
-
-// Get a single series by ID
+// GET /api/series/:id
 router.get('/:id', async (req, res) => {
     try {
-        const series = await Series.findById(req.params.id);
-        if (!series) {
-            return res.status(404).json({ message: 'Series not found' });
-        }
-        res.json(series);
-    } catch (err) {
-        console.error('Error fetching series:', err);
-        res.status(500).json({ message: 'Failed to fetch series' });
-    }
-})
-
-// Edit series object
-router.get('/:id/edit', async (req, res) => {
-    try {
-        const series = await Series.findById(req.params.id);
+        const series = await Series.findById(req.params.id).lean()
+        if (!series) return res.status(404).json({ message: 'Series not found' })
         res.json(series)
     } catch (err) {
-        res.status(500).json({ message: err.message })
+        if (err.name === 'CastError') return res.status(404).json({ message: 'Series not found' })
+        fail(res, err, 'Failed to fetch series')
     }
 })
 
-// Update series object
-router.put('/:id', async (req, res) => {
+// POST /api/series (owner)
+router.post('/', requireOwner, async (req, res) => {
     try {
-        // Find the series by ID and update it with the new data
-        const updatedSeries = await Series.findByIdAndUpdate(
-            req.params.id, // The ID of the series to update
-            {
-                title: req.body.title,
-                author: {
-                    id: req.body.authorId,
-                    firstName: req.body.authorFirstName,
-                    lastName: req.body.authorLastName
-                }
-            },
-            { new: true, runValidators: true } // Return the updated document and validate the data
-        )
-
-        if (!updatedSeries) {
-            return res.status(404).json({ message: 'Series not found' })
-        }
-
-        res.status(200).json(updatedSeries); // Send the updated series object as a response
+        const series = await Series.create({
+            title: req.body.title,
+            author: await authorFor(req.body.authorId),
+            owner: req.user.id,
+        })
+        res.status(201).json(series)
     } catch (err) {
-        console.error('Error updating series:', err)
-        res.status(500).json({ message: 'Failed to update series' })
+        fail(res, err, 'Failed to save series')
     }
 })
 
-// DELETE route for /api/authors/:id
-router.delete('/:id', async (req, res) => {
+// PUT /api/series/:id (owner) — also updates the title stored on its books
+router.put('/:id', requireOwner, async (req, res) => {
     try {
-        const series = await Series.findByIdAndDelete(req.params.id);
-        if (!series) {
-            return res.status(404).json({ message: 'Series not found' });
-        }
-        res.status(200).json({ message: 'Series deleted successfully', id: req.params.id });
+        const update = {}
+        if (req.body.title !== undefined) update.title = req.body.title
+        if (req.body.authorId !== undefined) update.author = await authorFor(req.body.authorId)
+        const series = await Series.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true })
+        if (!series) return res.status(404).json({ message: 'Series not found' })
+        await Book.updateMany({ 'series.id': series._id }, { $set: { 'series.title': series.title } })
+        res.json(series)
     } catch (err) {
-        console.error('Error deleting series:', err);
-        res.status(500).json({ message: 'Failed to delete series' });
+        fail(res, err, 'Failed to update series')
     }
-});
+})
+
+// DELETE /api/series/:id (owner) — refused while books are in it
+router.delete('/:id', requireOwner, async (req, res) => {
+    try {
+        const inUse = await Book.countDocuments({ 'series.id': req.params.id })
+        if (inUse) return res.status(409).json({ message: `This series still has ${inUse} book(s). Remove them from the series first.` })
+        const series = await Series.findByIdAndDelete(req.params.id)
+        if (!series) return res.status(404).json({ message: 'Series not found' })
+        res.json({ message: 'Series deleted', id: req.params.id })
+    } catch (err) {
+        fail(res, err, 'Failed to delete series')
+    }
+})
 
 module.exports = router

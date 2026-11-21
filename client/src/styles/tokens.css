@@ -1,0 +1,116 @@
+/*
+  Design tokens: the one place for colors, type, radii and spacing.
+  Direction: Round 3 "Catalog & find" (see design canvas).
+
+  Theme: follows the system (prefers-color-scheme) unless <html data-theme="light|dark">
+  is set; the header's theme button sets it and remembers the choice.
+*/
+
+:root {
+  /* Type */
+  --font-sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --text-xs: 0.8125rem;   /* 13px */
+  --text-sm: 0.875rem;    /* 14px */
+  --text-md: 0.9375rem;   /* 15px, body */
+  --text-lg: 1.0625rem;   /* 17px */
+  --text-xl: 1.125rem;    /* 18px */
+  --text-2xl: 1.875rem;   /* 30px, page titles */
+  --text-3xl: 2.25rem;    /* 36px, book title */
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --leading: 1.5;
+
+  /* Shape and space */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 40px;
+  --space-8: 64px;
+  --content-max: 1200px;
+  --control-height: 44px;   /* minimum touch target */
+
+  /* Light theme (default) */
+  --color-bg: #FAFAFA;
+  --color-surface: #FFFFFF;
+  --color-text: #18181B;
+  --color-text-muted: #52525B;
+  --color-border: #E4E4E7;
+  --color-border-strong: #D4D4D8;
+  --color-chip: #F4F4F5;
+  --color-accent: #1D4ED8;
+  --color-accent-hover: #1E40AF;
+  --color-on-accent: #FFFFFF;
+  --color-highlight: rgba(29, 78, 216, 0.14);
+  --color-danger: #B91C1C;
+  --color-success-text: #166534;
+  --color-success-bg: #DCFCE7;
+  --color-focus: #1D4ED8;
+  --color-chart: #1D4ED8;      /* chart marks; validated with the dataviz checker */
+  --shadow-cover: 0 1px 2px rgba(0, 0, 0, 0.12);
+  color-scheme: light;
+}
+
+/* Dark theme: when the system prefers dark and the user hasn't picked light */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg: #0F0F11;
+    --color-surface: #18181B;
+    --color-text: #F4F4F5;
+    --color-text-muted: #A1A1AA;
+    --color-border: #2E2E33;
+    --color-border-strong: #3F3F46;
+    --color-chip: #27272A;
+    --color-accent: #8AB4FF;
+    --color-accent-hover: #B3CDFF;
+    --color-on-accent: #0F0F11;
+    --color-highlight: rgba(138, 180, 255, 0.25);
+    --color-danger: #F87171;
+    --color-success-text: #86EFAC;
+    --color-success-bg: rgba(34, 197, 94, 0.16);
+    --color-focus: #8AB4FF;
+    --color-chart: #5B8FF0;
+    --shadow-cover: 0 1px 2px rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+  }
+}
+
+/* Dark theme: picked explicitly */
+:root[data-theme="dark"] {
+  --color-bg: #0F0F11;
+  --color-surface: #18181B;
+  --color-text: #F4F4F5;
+  --color-text-muted: #A1A1AA;
+  --color-border: #2E2E33;
+  --color-border-strong: #3F3F46;
+  --color-chip: #27272A;
+  --color-accent: #8AB4FF;
+  --color-accent-hover: #B3CDFF;
+  --color-on-accent: #0F0F11;
+  --color-highlight: rgba(138, 180, 255, 0.25);
+  --color-danger: #F87171;
+  --color-success-text: #86EFAC;
+  --color-success-bg: rgba(34, 197, 94, 0.16);
+  --color-focus: #8AB4FF;
+  --color-chart: #5B8FF0;
+  --shadow-cover: 0 1px 2px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+
+/* Placeholder cover colors (used when a book has no cover image). White text passes 4.5:1 on all. */
+:root {
+  --cover-1: #3F5F7F;
+  --cover-2: #6B4E3D;
+  --cover-3: #7A3B3B;
+  --cover-4: #355E4A;
+  --cover-5: #5A4A78;
+  --cover-6: #4B5563;
+}

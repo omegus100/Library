@@ -1,82 +1,83 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { GoBackButton } from '../components/Buttons'
+import styles from './FormOptions.module.css'
 
-const FormHeader = ({ isEditing }) => {
-  return (
-    <div className="form-header">
-      <h1>{isEditing ? 'Edit Book' : 'Create New Book'}</h1>
-      <GoBackButton />
+// Form fields (Round 3): label above the control, full width, themed.
+// Each field is a block; put them in a grid or stack to lay out a form.
+
+const Field = ({ label, htmlFor, hint, children, wide }) => (
+    <div className={`${styles.field} ${wide ? styles.wide : ''}`}>
+        <label htmlFor={htmlFor} className={styles.label}>{label}</label>
+        {children}
+        {hint}
     </div>
-  )
-}
-
-const SearchInput = ({ type = 'text', value, onChange, placeholder, className }) => (
-  <>
-      <input
-          type={type}
-          value={value}
-          onChange={onChange}
-          placeholder={placeholder}
-          className={className ? className : 'search-input'}
-      />
-      <br />
-  </>
 )
 
-const SelectInput = ({ label, name, value, options, onChange, placeholder = `Select ${label}`, link, linkText }) => (
-  <>
-      <label htmlFor={name}>{label}:</label>
-      <select name={name} value={value} onChange={onChange}>
-          <option value="">{placeholder}</option> {/* Default placeholder */}
-          {options.map((option, index) => (
-              <option
-                  key={index}
-                  value={typeof option === 'string' ? option : option._id} // Handle strings or objects
-              >
-                  {typeof option === 'string' ? option : option.title || `${option.firstName} ${option.lastName}`}
-              </option>
-          ))}
-      </select>
-
-      {link && (
-          <Link to={link}>
-              {linkText ? linkText : `Add New ${label}`}
-          </Link>
-      )}
-      <br />
-  </>
+const SearchInput = ({ type = 'search', value, onChange, placeholder, className, label = 'Search', id = 'search' }) => (
+    <div className={className || styles.searchWrap}>
+        <label htmlFor={id} className="sr-only">{label}</label>
+        <input
+            id={id}
+            type={type}
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            className={styles.control}
+            autoComplete="off"
+        />
+    </div>
 )
 
-const TextInput = ({ label, name, type = 'text', value, onChange, placeholder }) => (
-  <>
-      <label htmlFor={name}>{label}:</label>
-      <input
-          id={name}
-          name={name}
-          type={type}
-          value={value}
-          onChange={onChange}
-          placeholder={placeholder ? placeholder : `Enter ${label}`}
-      />  
-      <br />
-  </>
+const SelectInput = ({ label, name, value, options = [], onChange, placeholder = `Choose ${label.toLowerCase()}`, link, linkText, wide }) => (
+    <Field
+        label={label}
+        htmlFor={name}
+        wide={wide}
+        hint={link ? <Link to={link} className={styles.hintLink}>{linkText || `Add new ${label.toLowerCase()}`}</Link> : null}
+    >
+        <select id={name} name={name} value={value ?? ''} onChange={onChange} className={styles.control}>
+            <option value="">{placeholder}</option>
+            {options.map((option, index) => (
+                <option key={index} value={typeof option === 'string' ? option : option._id}>
+                    {typeof option === 'string' ? option : option.title || `${option.firstName} ${option.lastName}`}
+                </option>
+            ))}
+        </select>
+    </Field>
 )
 
-const TextAreaInput = ({ label, name, value, onChange, placeholder, rows }) => (  
-  <>
-      <label htmlFor={name}>{label}:</label>
-      <textarea
-          id={name}
-          name={name}
-          value={value}
-          onChange={onChange}
-          placeholder={placeholder ? placeholder : `Enter ${label}`}
-          rows={rows ? rows : 4} // Default to 4 rows if not specified
-      />
-      <br />
-  </>
+const TextInput = ({ label, name, type = 'text', value, onChange, placeholder, required, wide, inputMode, autoComplete, min, max, step, hint }) => (
+    <Field label={required ? `${label} (required)` : label} htmlFor={name} wide={wide} hint={hint ? <span className={styles.hint}>{hint}</span> : null}>
+        <input
+            id={name}
+            name={name}
+            type={type}
+            value={value ?? ''}
+            onChange={onChange}
+            placeholder={placeholder || ''}
+            required={required}
+            inputMode={inputMode}
+            autoComplete={autoComplete}
+            min={min}
+            max={max}
+            step={step}
+            className={styles.control}
+        />
+    </Field>
 )
 
-export { FormHeader, SearchInput, SelectInput, TextInput, TextAreaInput } 
+const TextAreaInput = ({ label, name, value, onChange, placeholder, rows = 4, wide = true }) => (
+    <Field label={label} htmlFor={name} wide={wide}>
+        <textarea
+            id={name}
+            name={name}
+            value={value ?? ''}
+            onChange={onChange}
+            placeholder={placeholder || ''}
+            rows={rows}
+            className={`${styles.control} ${styles.textarea}`}
+        />
+    </Field>
+)
 
+export { Field, SearchInput, SelectInput, TextInput, TextAreaInput }
