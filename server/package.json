@@ -19,12 +19,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/omegus100/React-Rebuild.git"
+    "url": "git+https://github.com/omegus100/Library.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/omegus100/React-Rebuild/issues"
+    "url": "https://github.com/omegus100/Library/issues"
   },
-  "homepage": "https://github.com/omegus100/React-Rebuild#readme"
+  "homepage": "https://github.com/omegus100/Library#readme"
 }
