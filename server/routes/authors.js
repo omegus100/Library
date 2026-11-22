@@ -1,94 +1,83 @@
 const express = require('express')
-const router = express.Router()
 const Author = require('../models/author')
+const Book = require('../models/book')
+const Series = require('../models/series')
+const { requireOwner } = require('../lib/auth')
 
-// Get all authors
+const router = express.Router()
+
+const fail = (res, err, message) => {
+    if (err.name === 'ValidationError' || err.name === 'CastError') return res.status(400).json({ message: err.message })
+    console.error(message, err)
+    res.status(500).json({ message })
+}
+
+// GET /api/authors
 router.get('/', async (req, res) => {
     try {
-        const authors = await Author.find({})
-        res.json(authors)
+        res.json(await Author.find({}).sort({ lastName: 1, firstName: 1 }).lean())
     } catch (err) {
-        res.status(500).json({ message: err.message })
+        fail(res, err, 'Failed to list authors')
     }
 })
 
-// POST route for /api/authors
-router.post('/', async (req, res) => {
-    const author = new Author({
-        firstName: req.body.firstName,
-        lastName: req.body.lastName
-    })
-
-    try {
-        const newAuthor = await author.save();
-        res.status(201).json(newAuthor)
-    } catch (err) {
-        console.error('Error saving author:', err)
-        res.status(500).json({ message: 'Failed to save author' })
-    }
-})
-
-// Get a single author by ID
+// GET /api/authors/:id
 router.get('/:id', async (req, res) => {
     try {
-        const author = await Author.findById(req.params.id);
-        if (!author) {
-            return res.status(404).json({ message: 'Author not found' });
-        }
-        res.json(author);
-    } catch (err) {
-        console.error('Error fetching author:', err);
-        res.status(500).json({ message: 'Failed to fetch author' });
-    }
-})
-
-// Edit author object
-router.get('/:id/edit', async (req, res) => {
-    try {
-        const author = await Author.findById(req.params.id);
+        const author = await Author.findById(req.params.id).lean()
+        if (!author) return res.status(404).json({ message: 'Author not found' })
         res.json(author)
     } catch (err) {
-        res.status(500).json({ message: err.message })
+        if (err.name === 'CastError') return res.status(404).json({ message: 'Author not found' })
+        fail(res, err, 'Failed to fetch author')
     }
 })
-    
 
-// Update author object
-router.put('/:id', async (req, res) => {
+// POST /api/authors (owner)
+router.post('/', requireOwner, async (req, res) => {
     try {
-        // Find the author by ID and update it with the new data
-        const updatedAuthor = await Author.findByIdAndUpdate(
-            req.params.id, // The ID of the author to update
-            {
-                firstName: req.body.firstName,
-                lastName: req.body.lastName
-            },
-            { new: true, runValidators: true } // Return the updated document and validate the data
+        const author = await Author.create({
+            firstName: req.body.firstName,
+            lastName: req.body.lastName,
+            owner: req.user.id,
+        })
+        res.status(201).json(author)
+    } catch (err) {
+        fail(res, err, 'Failed to save author')
+    }
+})
+
+// PUT /api/authors/:id (owner) — also updates the name stored on their books and series
+router.put('/:id', requireOwner, async (req, res) => {
+    try {
+        const author = await Author.findByIdAndUpdate(
+            req.params.id,
+            { firstName: req.body.firstName, lastName: req.body.lastName },
+            { new: true, runValidators: true }
         )
-
-        if (!updatedAuthor) {
-            return res.status(404).json({ message: 'Author not found' })
-        }
-
-        res.status(200).json(updatedAuthor); // Send the updated author object as a response
+        if (!author) return res.status(404).json({ message: 'Author not found' })
+        const names = { firstName: author.firstName, lastName: author.lastName }
+        await Promise.all([
+            Book.updateMany({ 'author.id': author._id }, { $set: { 'author.firstName': names.firstName, 'author.lastName': names.lastName } }),
+            Series.updateMany({ 'author.id': author._id }, { $set: { 'author.firstName': names.firstName, 'author.lastName': names.lastName } }),
+        ])
+        res.json(author)
     } catch (err) {
-        console.error('Error updating author:', err)
-        res.status(500).json({ message: 'Failed to update author' })
+        fail(res, err, 'Failed to update author')
     }
 })
 
-// DELETE route for /api/authors/:id
-router.delete('/:id', async (req, res) => {
+// DELETE /api/authors/:id (owner) — refused while books still use this author
+router.delete('/:id', requireOwner, async (req, res) => {
     try {
-        const author = await Author.findByIdAndDelete(req.params.id);
-        if (!author) {
-            return res.status(404).json({ message: 'Author not found' });
-        }
-        res.status(200).json({ message: 'Author deleted successfully', id: req.params.id });
+        const inUse = await Book.countDocuments({ 'author.id': req.params.id })
+        if (inUse) return res.status(409).json({ message: `This author still has ${inUse} book(s). Delete or reassign them first.` })
+        const author = await Author.findByIdAndDelete(req.params.id)
+        if (!author) return res.status(404).json({ message: 'Author not found' })
+        res.json({ message: 'Author deleted', id: req.params.id })
     } catch (err) {
-        console.error('Error deleting author:', err);
-        res.status(500).json({ message: 'Failed to delete author' });
+        fail(res, err, 'Failed to delete author')
     }
-});
+})
 
-module.exports = router;
+module.exports = router

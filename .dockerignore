@@ -1,0 +1,12 @@
+# Never put secrets, local data or build output in the image
+**/node_modules
+**/.env
+**/.env.local
+server/.env*
+!server/.env.example
+backups
+client/build
+server/data
+.git
+.vscode
+*.log

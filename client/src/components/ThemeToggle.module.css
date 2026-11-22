@@ -1,0 +1,17 @@
+.button {
+    width: var(--control-height);
+    height: var(--control-height);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+}
+
+.button:hover {
+    color: var(--color-text);
+    background: var(--color-chip);
+}

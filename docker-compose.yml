@@ -1,0 +1,43 @@
+# Self-hosting on a NAS (Synology Container Manager or any Docker host).
+#   1. cp .env.docker.example .env      and fill in SESSION_SECRET (and optional API key)
+#   2. docker compose up -d --build
+#   3. docker compose exec app node scripts/create-owner.js you@example.com
+#   4. open http://<nas-ip>:8080
+# Full guide: DOCKER.md
+
+services:
+  app:
+    build: .
+    image: library-app:latest
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "${APP_PORT:-8080}:5000"
+    environment:
+      MONGO_URI: mongodb://mongo:27017/library
+      SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in .env}
+      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost:8080}
+      COVER_STORAGE: local
+      COVER_DIR: /data/covers
+      GOOGLE_BOOKS_API_KEY: ${GOOGLE_BOOKS_API_KEY:-}
+    volumes:
+      - covers:/data/covers
+
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+      - ./backups:/backups
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    # Not published to the network: only the app container can reach it.
+
+volumes:
+  mongo-data:
+  covers:

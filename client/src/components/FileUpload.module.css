@@ -1,0 +1,57 @@
+.wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.label {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+}
+
+/* FilePond's own markup: restyle it with the app's tokens */
+.wrap :global(.filepond--root) {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+}
+
+.wrap :global(.filepond--panel-root) {
+    background: var(--color-surface);
+    border: 1px dashed var(--color-border-strong);
+    border-radius: var(--radius-lg);
+}
+
+.wrap :global(.filepond--drop-label) {
+    color: var(--color-text-muted);
+    min-height: 88px;
+}
+
+.wrap :global(.filepond--label-action) {
+    color: var(--color-accent);
+    text-decoration-color: var(--color-accent);
+}
+
+.wrap :global(.filepond--item-panel) {
+    background: var(--color-chip);
+}
+
+.wrap :global(.filepond--file) {
+    color: var(--color-text);
+}
+
+.wrap :global(.filepond--image-preview),
+.wrap :global(.filepond--image-preview-wrapper) {
+    background: var(--color-chip);
+}
+
+/* FilePond darkens the top of the preview; drop that so the cover reads cleanly */
+.wrap :global(.filepond--image-preview-overlay-idle) {
+    display: none;
+}
+
+/* Keep the remove button visible on light covers */
+.wrap :global(.filepond--file-action-button) {
+    background: rgba(0, 0, 0, 0.6);
+    color: #FFFFFF;
+}

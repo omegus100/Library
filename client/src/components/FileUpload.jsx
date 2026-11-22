@@ -1,23 +1,27 @@
-import { FilePond, registerPlugin } from 'react-filepond';
-import 'filepond/dist/filepond.min.css';
-import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css';
-import FilePondPluginImagePreview from 'filepond-plugin-image-preview';
+import { FilePond, registerPlugin } from 'react-filepond'
+import 'filepond/dist/filepond.min.css'
+import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css'
+import FilePondPluginImagePreview from 'filepond-plugin-image-preview'
+import styles from './FileUpload.module.css'
 
-// Register the FilePond plugin
-registerPlugin(FilePondPluginImagePreview);
+registerPlugin(FilePondPluginImagePreview)
 
-const FileUploader = ({ files, onUpdateFiles }) => (
-    <>
-        <label htmlFor="cover">Cover Image:</label>
+// Cover image picker (drag and drop or browse), themed to match the app
+const FileUploader = ({ files, onUpdateFiles, label = 'Cover image' }) => (
+    <div className={styles.wrap}>
+        <span className={styles.label} id="cover-label">{label}</span>
         <FilePond
             files={files ? [{ source: files }] : []}
             onupdatefiles={onUpdateFiles}
             allowMultiple={false}
             maxFiles={1}
+            acceptedFileTypes={['image/*']}
             name="cover"
-            labelIdle='Drag & Drop your cover image or <span class="filepond--label-action">Browse</span>'
+            credits={false}
+            imagePreviewMaxHeight={240}
+            labelIdle='Drag a cover image here or <span class="filepond--label-action">browse</span>'
         />
-    </>
-);
+    </div>
+)
 
-export default FileUploader;
+export default FileUploader

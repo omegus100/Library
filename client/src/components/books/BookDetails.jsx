@@ -1,113 +1,141 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import axios from 'axios'
-import { GoBackButton, DeleteButton, EditButton } from '../Buttons'
-import { GetDataById, GetData } from '../../hooks/getData'
-import BookCover from './BookCover'
-import styles from '../../stylesheets/BookDetails.css'
-import { Loading } from '../Icons'
+import { GoBackButton, buttonClass } from '../Buttons'
+import { useBook, useBookList, useDeleteBook, useRefreshBook } from '../../api/hooks'
+import { errorMessage } from '../../api/client'
+import { useAuth } from '../../auth/AuthContext'
+import { useToast } from '../Toast'
+import { DetailSkeleton } from '../Skeleton'
+import Cover from '../library/Cover'
+import BookStrip from '../library/BookStrip'
+import ReadingPanel from './ReadingPanel'
+import PersonalPanel from './PersonalPanel'
+import { authorName } from '../../utils/bookSort'
+import styles from './BookDetails.module.css'
+
+// Dates are stored as midnight UTC; show them in UTC so they don't slip a day
+const formatDate = (value) =>
+    value ? new Date(value).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }) : null
+
+const LinkList = ({ items, to }) =>
+    items.map((item, i) => (
+        <React.Fragment key={item}>
+            {i > 0 && ', '}
+            <Link to={to(item)}>{item}</Link>
+        </React.Fragment>
+    ))
+
+const FIELD_NAMES = { description: 'description', publisher: 'publisher', pageCount: 'page count', isbn: 'ISBN', publishDate: 'publish date', genres: 'genres', cover: 'cover' }
 
 export default function BookDetails() {
-    const { id } = useParams() // Get the book ID from the URL
-    const navigate = useNavigate() // Use navigate to redirect after deletion
+    const { id } = useParams()
+    const navigate = useNavigate()
+    const toast = useToast()
+    const { isOwner } = useAuth()
+    const { data: book, error, isLoading } = useBook(id)
+    const seriesId = book?.series?.id
+    const authorId = book?.author?.id
+    const { data: seriesData } = useBookList({ seriesId, sort: 'series', owned: 'all', limit: 100 }, { enabled: Boolean(seriesId) })
+    const { data: authorData } = useBookList({ authorId, sort: 'series', owned: 'all', limit: 100 }, { enabled: Boolean(authorId) })
+    const remove = useDeleteBook()
+    const refresh = useRefreshBook()
 
-    const { data: book, error: bookError, isLoading } = GetData('books', id)
-    const { data: authors, error: authorsError } = GetData('authors')
-    const { data: books, error: bookserror } = GetData('books')
-
-    const handleDelete = async () => {
-        try {
-            // await axios.delete(`/api/books/${id}`) // Call the DELETE route
-            await GetDataById('books', id) // Call the DELETE route
-            alert('Book deleted successfully') // Notify the user
-            navigate('/books') // Redirect to the books list page
-        } catch (err) {
-            console.error('Error deleting book:', err)
-            alert('Failed to delete the book')
-        }
+    const handleDelete = () => {
+        if (!window.confirm(`Delete “${book.title}”? This can’t be undone.`)) return
+        remove.mutate(id, {
+            onSuccess: () => { toast.success(`Deleted “${book.title}”`); navigate('/library') },
+            onError: (err) => toast.error(errorMessage(err, 'Couldn’t delete the book.')),
+        })
     }
 
-    if (isLoading) {
-        return <Loading />
+    const handleRefresh = () =>
+        refresh.mutate(id, {
+            onSuccess: ({ filled }) => toast.success(filled.length
+                ? `Filled in ${filled.map((f) => FIELD_NAMES[f] || f).join(', ')} from Google Books`
+                : 'Nothing missing: your details are already complete'),
+            onError: (err) => toast.error(errorMessage(err, 'Couldn’t reach Google Books.')),
+        })
+
+    if (isLoading) return <div className={styles.page}><GoBackButton to="/library" label="All books" /><DetailSkeleton /></div>
+    if (error || !book) {
+        return (
+            <div className={styles.page}>
+                <GoBackButton to="/library" label="All books" />
+                <p className={styles.message}>{error?.response?.status === 404 ? 'This book isn’t in your library.' : errorMessage(error, 'Couldn’t load this book.')}</p>
+            </div>
+        )
     }
 
-    if (bookError || authorsError || bookserror) {
-        // Handle errors from GetData or book fetching
-        return <p>Error fetching book details: {bookError.message}</p>
-    }
+    const seriesBooks = (seriesData?.items || [])
+    const authorBooks = (authorData?.items || []).filter((b) => b._id !== book._id && (!seriesId || b.series?.id !== seriesId))
 
-    if (!book || !authors || !books) {
-        // Check if book, authors, or books data is not available
-        return <p>Loading...</p>
-    }
+    const facts = [
+        seriesId && { label: 'Series', value: <Link to={`/series/${seriesId}`}>{book.series.title}{book.series.volume ? ` · Book ${book.series.volume}` : ''}</Link> },
+        book.format?.length > 0 && { label: 'Format', value: <LinkList items={book.format} to={(f) => `/format/${encodeURIComponent(f)}`} /> },
+        book.genres?.length > 0 && { label: book.genres.length > 1 ? 'Genres' : 'Genre', value: <LinkList items={book.genres} to={(g) => `/genres/${encodeURIComponent(g.toLowerCase())}`} /> },
+        book.pageCount && { label: 'Pages', value: book.pageCount },
+        book.publishDate && { label: 'Published', value: formatDate(book.publishDate) },
+        book.publisher && { label: 'Publisher', value: book.publisher },
+        book.isbn && { label: 'ISBN', value: book.isbn },
+        book.createdAt && { label: 'Added', value: formatDate(book.createdAt) },
+    ].filter(Boolean)
 
-    const author = authors.find((author) => author._id === book.author?.id)
-    const booksBySeries = books.filter((b) => b.series?.id === book.series?.id)
-    const booksByAuthor = books.filter((b) => b.author?.id === book.author?.id && b.series?.id !== book.series?.id)
+    const name = authorName(book)
 
     return (
-        <div className="book-details-container">
-            <GoBackButton />
-            <div className="book-details-content">
-               <div>
-                 {/* Book Cover */}
-                 <img
-                    className="book-cover"
-                    src={book.coverImagePath}
-                    alt={book.title}
-                />
-                    <div className="buttons-container">
-                        <button className="edit-button" onClick={() => navigate(`/books/${book._id}/edit`)}>Edit</button>
-                        <button className="delete-button" onClick={handleDelete}>Delete</button>
-                    </div>
-               </div>
-                {/* Book Details */}
-                <div className="book-details">
-                    <div className="book-details-header">
-                        <h1>{book.title}</h1>
-                    </div>
-                    {author && (
-                        <p>
-                           {/* <span>by </span> */}
-                            {/* Author:{' '} */}
-                            <Link to={`/authors/${author._id}`}>
-                              {author.firstName} {author.lastName}
-                            </Link>
-                        </p>
+        <div className={styles.page}>
+            <GoBackButton to="/library" label="All books" />
+
+            <article className={styles.main}>
+                <div className={styles.cover}>
+                    <Cover book={book} />
+                </div>
+
+                <div className={styles.info}>
+                    <header className={styles.header}>
+                        <h1 className={styles.title}>{book.title}</h1>
+                        {name && (authorId
+                            ? <Link to={`/authors/${authorId}`} className={styles.author}>{name}</Link>
+                            : <span className={styles.author}>{name}</span>)}
+                    </header>
+
+                    <ReadingPanel book={book} editable={isOwner} />
+
+                    {facts.length > 0 && (
+                        <dl className={styles.facts}>
+                            {facts.map((fact) => (
+                                <div key={fact.label} className={styles.fact}>
+                                    <dt>{fact.label}</dt>
+                                    <dd>{fact.value}</dd>
+                                </div>
+                            ))}
+                        </dl>
                     )}
-                    {book.series && (
-                        <p>
-                            Series:{' '}
-                            <Link to={`/series/${book.series.id}`}>
-                                {book.series.title} (Book {book.series.volume})
-                            </Link>
-                        </p>
-                    )}                 
-                    <p>{book.publishDate ? `Publish Date: ${new Date(book.publishDate).toLocaleDateString('en-US')}` : null}</p>
-                    <p>{book.pageCount ? `Page Count: ${book.pageCount}` : null}</p>
-                    <p>Format: <Link to={`/format/${book.format}`}>{book.format}</Link>  </p>
-                    <p>Genre: <Link to={`/genres/${book.genres}`} >{book.genres}</Link>  </p>
-                    <p>{book.publisher ? `Publisher: ${book.publisher}` : null}</p>
-                    <p>{book.isbn ? `ISBN: ${book.isbn}` : null}</p>
-                    <p>{book.description ? `Description: ${book.description}` : null}</p>
+
+                    {book.description && <p className={styles.description}>{book.description}</p>}
+
+                    <PersonalPanel book={book} editable={isOwner} />
+
+                    {isOwner && (
+                        <div className={styles.actions}>
+                            <Link to={`/books/${book._id}/edit`} className={buttonClass('secondary')}>Edit details</Link>
+                            <button type="button" className={buttonClass('secondary')} onClick={handleRefresh} disabled={refresh.isPending}>
+                                {refresh.isPending ? 'Looking up…' : 'Fill missing details'}
+                            </button>
+                            <button type="button" className={buttonClass('danger')} onClick={handleDelete} disabled={remove.isPending}>Delete</button>
+                        </div>
+                    )}
                 </div>
-            </div>
-            {/* Series Section */}
-            {booksBySeries.length > 1 && book.series ? (
-                <div>
-                    <p><strong>{book.series.title} Series:</strong></p>
-                    <BookCover books={booksBySeries} subtitle={(book) => `Book ${book.series.volume}`} />
-                </div>
-            ) : null}
-            <br /><br />
-             {booksByAuthor.length > 0 && book.author ? (
-                <div>
-                    <p><strong>Other works by {book.author.lastName}:</strong></p>
-                    <BookCover books={booksByAuthor} />
-                </div>
-            ) : null}
-            {/* Buttons */}
-           
+            </article>
+
+            {seriesBooks.length > 1 && (
+                <BookStrip
+                    title={`${book.series.title} series`}
+                    books={seriesBooks}
+                    caption={(b) => (b.series?.volume ? `Book ${b.series.volume}` : '')}
+                />
+            )}
+            {authorBooks.length > 0 && <BookStrip title={`More by ${name}`} books={authorBooks} />}
         </div>
-    );
+    )
 }

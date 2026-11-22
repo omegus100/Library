@@ -1,0 +1,2 @@
+# Single-page app: let React Router handle every path (Netlify only; Docker/Express does this itself)
+/*    /index.html    200

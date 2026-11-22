@@ -1,0 +1,132 @@
+.grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+    gap: var(--space-6) var(--space-5);
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    color: var(--color-text);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+}
+
+.card:hover {
+    color: var(--color-text);
+}
+
+.card:hover .title {
+    text-decoration: underline;
+}
+
+.list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--color-border);
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: var(--space-3) var(--space-2);
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text);
+    text-decoration: none;
+}
+
+.list li:last-child .row {
+    border-bottom: 0;
+}
+
+.row:hover {
+    background: var(--color-chip);
+    color: var(--color-text);
+}
+
+.text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.title {
+    font-weight: var(--weight-semibold);
+    line-height: 1.3;
+}
+
+.author {
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+}
+
+.series {
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+}
+
+@media (max-width: 600px) {
+    .grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: var(--space-5) var(--space-4);
+    }
+}
+
+.rowMeta {
+    margin-left: auto;
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+}
+
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.tag {
+    font-size: 11px;
+    font-weight: var(--weight-semibold);
+    padding: 1px 8px;
+    border-radius: var(--radius-pill);
+    background: var(--color-chip);
+    color: var(--color-text);
+}
+
+.tagWish {
+    background: var(--color-highlight);
+    color: var(--color-accent);
+}
+
+.tagLoan {
+    background: var(--color-success-bg);
+    color: var(--color-success-text);
+}
+
+.progress {
+    display: block;
+    height: 4px;
+    margin-top: -4px;
+    border-radius: var(--radius-pill);
+    background: var(--color-chip);
+    overflow: hidden;
+}
+
+.progressBar {
+    display: block;
+    height: 100%;
+    background: var(--color-accent);
+}

@@ -1,77 +1,35 @@
-import React, { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { GetData } from '../hooks/getData'
-import { AddButton } from '../components/Buttons'
-import styles from '../stylesheets/Index.module.css'
-import { SearchInput } from '../components/FormOptions'
-import SortOptions from '../components/SortOptions'
-import ListLayout from '../components/PageLayouts'
-import { Loading } from '../components/Icons'
-import { TabMenu } from '../components/Headings'
-import  NoContentFound  from '../components/NoContent' 
+import React from 'react'
+import { useAuthors, useCounts } from '../api/hooks'
+import { useAuth } from '../auth/AuthContext'
+import IndexList from '../components/library/IndexList'
 
-const Authors = () => {
-    const { data: authors, error, isLoading } = GetData('authors')
-    const [searchQuery, setSearchQuery] = useState('')
-    const [sortBy, setSortBy] = useState('lastName')
-    const location = useLocation() // Get the current location
+const compare = (a, b) => (a || '').localeCompare(b || '', undefined, { sensitivity: 'base' })
 
-     // Filter authors based on the search query
-     const filteredAuthors = authors?.filter((author) =>
-        author.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        author.lastName.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+export default function Authors() {
+    const { isOwner } = useAuth()
+    const { data: authors = [], error, isLoading } = useAuthors()
+    const { data: counts } = useCounts()
 
-    // Sort authors by last name, then first name  
-    const sortedAuthors = filteredAuthors?.sort((a, b) => {
-        const lastNameA = a.lastName.toLowerCase()
-        const lastNameB = b.lastName.toLowerCase()
-        switch (sortBy) {
-            case 'firstName':
-                return lastNameA.localeCompare(lastNameB)
-            case 'lastName':
-                return lastNameB.localeCompare(lastNameA)
-            default:
-                return lastNameA.localeCompare(lastNameB)
-        }
-    })
-
-    if (isLoading) {
-            return <Loading /> 
-    }
-
-    // if (error) {
-    //     return <p>Error fetching authors: {error.message}</p>
-    // }
+    // Surname A–Z, then first name
+    const items = [...authors]
+        .sort((a, b) => compare(a.lastName, b.lastName) || compare(a.firstName, b.firstName))
+        .map((a) => ({
+            id: a._id,
+            to: `/authors/${a._id}`,
+            title: `${a.firstName === '-' ? '' : a.firstName} ${a.lastName}`.trim(),
+            count: counts?.byAuthor?.[a._id] || 0,
+        }))
 
     return (
-        <>
-            {/* <div className={styles.indexHeader}>
-                <h1>Authors</h1>
-                
-            </div>     */}
-            <TabMenu />
-            <div className={styles.filterContainer}>
-                <SearchInput
-                    type="text"
-                    placeholder="Search authors..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)} 
-                    className={styles.searchInput}
-                />  
-                <SortOptions sortBy={sortBy} setSortBy={setSortBy} object="author" className={styles.sortContainer}/> 
-                <Link to="/authors/new">
-                    <AddButton />               
-                </Link> 
-            </div>
-
-            {error ? (
-                <NoContentFound element={`authors`}/>
-            ) : (
-                <ListLayout authors={sortedAuthors} sortBy={sortBy}/>  
-                )}  
-        </>
+        <IndexList
+            heading="Authors"
+            noun="author"
+            items={items}
+            isLoading={isLoading}
+            error={error}
+            addTo={isOwner ? '/authors/new' : null}
+            addLabel="Add author"
+            searchLabel="Search authors"
+        />
     )
 }
-
-export default Authors

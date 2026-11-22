@@ -84,7 +84,7 @@ dist
 
 # Gatsby files
 .cache/
-public
+/public
 
 # Storybook build outputs
 .out
@@ -122,3 +122,6 @@ Desktop.ini
 # Uploads
 uploads/
 server/uploads/
+
+# Local database backups (contain real data)
+/backups/

@@ -1,111 +1,54 @@
-import React, { useState, useEffect } from 'react'
-import axios from 'axios'
-import { useParams, useNavigate } from 'react-router-dom'
-import { GetData } from '../../hooks/getData'
-import { GoBackButton, SubmitButton } from '../Buttons'
-import { TextInput, SelectInput } from '../../components/FormOptions'
-import { handleFormSubmit } from '../../hooks/handleFormSubmit'
+import React, { useEffect, useState } from 'react'
+import { Link, useParams, useNavigate } from 'react-router-dom'
+import { useAuthors, useSaveSeries, useSeries } from '../../api/hooks'
+import { errorMessage } from '../../api/client'
+import { GoBackButton, SubmitButton, buttonClass } from '../Buttons'
+import { TextInput, SelectInput } from '../FormOptions'
+import { useToast } from '../Toast'
+import styles from '../FormPage.module.css'
 
-export default function SeriesForm({ setSeries }) {
+// New series (/series/new) and edit series (/series/:id/edit)
+export default function SeriesForm() {
     const { id } = useParams()
     const navigate = useNavigate()
-    const [formData, setFormData] = useState({
-        title: '',
-        authorId: '',
-        authorFirstName: '',
-        authorLastName: ''
-    })
+    const toast = useToast()
+    const [form, setForm] = useState({ title: '', authorId: '' })
+    const { data: authors = [] } = useAuthors()
+    const { data: series } = useSeries(id)
+    const save = useSaveSeries()
 
-    const { data: authors, error: authorsError } = GetData('authors')
-    const { data: series, error: seriesError } = GetData('series', id);
-
-    // Populate form data when series data is fetched
-    React.useEffect(() => {
-        if (series) {
-            setFormData({
-                title: series.title,
-                authorId: series.author.id,
-                authorFirstName: series.author.firstName,
-                authorLastName: series.author.lastName,
-            });
-        }
+    useEffect(() => {
+        if (series) setForm({ title: series.title || '', authorId: series.author?.id || '' })
     }, [series])
 
-    const handleInputChange = (event) => {
-        const { name, value } = event.target
-        setFormData((prevData) => ({
-            ...prevData,
-            [name]: value,
-        }))
+    const onChange = (e) => setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
 
-       // Update author info immediately when authorId changes
-        if (name === "authorId") {
-            updateAuthorInfo(value)
-        }
-    }
-    
-    const updateAuthorInfo = (authorId) => {
-        const selectedAuthor = authors.find((author) => author._id === authorId)
-        if (selectedAuthor) {
-            setFormData((prevData) => ({
-                ...prevData,
-                authorFirstName: selectedAuthor.firstName,
-                authorLastName: selectedAuthor.lastName
-            }))
-        }
-    }
-
-    // This function is called when the form is submitted
     const handleSubmit = (event) => {
         event.preventDefault()
-
-        // Prevent submission if no author is selected
-        if (!formData.authorId) {
-            alert('Please select an author before submitting the form.')
-            return
-        } 
-
-        handleFormSubmit({
-            endpoint: '/api/series',
-            id,
-            formData,
-            setItems: setSeries,
-            successMessage: id ? 'Series updated successfully!' : 'Series created successfully!',
-            navigateTo: '/series',
-            navigate,
+        save.mutate({ id, data: form }, {
+            onSuccess: (saved) => {
+                toast.success(id ? 'Series updated' : 'Series added')
+                navigate(`/series/${saved._id}`)
+            },
+            onError: (err) => toast.error(errorMessage(err, 'Couldn’t save the series.')),
         })
     }
 
-    const formFields = [
-        { label: 'Title', name: 'title', type: 'text', placeholder: 'Enter Series Title', component: TextInput },
-        { label: 'Author', name: 'authorId', value: formData.authorId, options: authors, placeholder: 'Select Author', component: SelectInput },
-    ]
+    const cancelTo = id ? `/series/${id}` : '/series'
+    const valid = form.title.trim() && form.authorId
 
     return (
-        <>
-        <GoBackButton />
-        <h1>{id ? 'Edit Series' : 'New Series'}</h1>
-        <form onSubmit={handleSubmit}>
-            {formFields.map((field) => {
-                const FieldComponent = field.component
-                return (
-                    <FieldComponent
-                        key={field.name}
-                        label={field.label}
-                        name={field.name}
-                        type={field.type}
-                        value={formData[field.name]}
-                        onChange={handleInputChange}
-                        options={field.options}
-                        placeholder={field.placeholder}
-                    />
-                )
-            }
-            )}
-        <SubmitButton isEditing={!!id} object="Series" />
-        </form>
-        {/* {authorsError && <p>Error fetching authors: {authorsError.message}</p>}
-        {seriesError && <p>Error fetching series: {seriesError.message}</p>} */}
-        </>
+        <div className={styles.page}>
+            <GoBackButton to={cancelTo} label={id ? 'Back to series' : 'All series'} />
+            <h1 className={styles.title}>{id ? 'Edit series' : 'New series'}</h1>
+            <form onSubmit={handleSubmit} className={styles.card}>
+                <TextInput label="Title" name="title" value={form.title} onChange={onChange} required />
+                <SelectInput label="Author" name="authorId" value={form.authorId} options={authors} onChange={onChange} link="/authors/new" linkText="Add a new author" />
+                <div className={styles.actions}>
+                    <SubmitButton isEditing={Boolean(id)} object="Series" disabled={save.isPending || !valid} />
+                    <Link to={cancelTo} className={buttonClass('secondary')}>Cancel</Link>
+                </div>
+            </form>
+        </div>
     )
 }

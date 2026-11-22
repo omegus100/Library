@@ -1,60 +1,51 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { GoBackButton, DeleteButton, EditButton } from '../Buttons'
-import { GetData } from '../../hooks/getData'
-import BookCover from '../books/BookCover'
-import axios from 'axios'
-
-// Get API base URL from environment variables
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000'
+import { EditButton, DeleteButton } from '../Buttons'
+import { useAuthor, useBookList, useDeleteAuthor } from '../../api/hooks'
+import { errorMessage } from '../../api/client'
+import { useAuth } from '../../auth/AuthContext'
+import { useToast } from '../Toast'
+import CollectionPage from '../library/CollectionPage'
 
 export default function AuthorDetails() {
-    const { id } = useParams() // Get the author ID from the URL
+    const { id } = useParams()
     const navigate = useNavigate()
+    const toast = useToast()
+    const { isOwner } = useAuth()
+    const { data: author, error, isLoading } = useAuthor(id)
+    const { data: list, isLoading: booksLoading } = useBookList({ authorId: id, sort: 'series', owned: 'all', limit: 500 })
+    const remove = useDeleteAuthor()
+    const books = list?.items || []
+    const name = author ? `${author.firstName === '-' ? '' : author.firstName} ${author.lastName}`.trim() : ''
 
-    const { data: author, error: authorsError } = GetData('authors', id) 
-    const { data: books, error: booksError } = GetData('books')
-
-    // Handle errors from GetData or author fetching
-    if (authorsError || booksError) {
-        return <p>Error fetching data: {authorsError?.message || booksError?.message}</p>
-    }
-
-    if (!author || !books) {
-        return <p>Loading author details...</p>
-    }
-
-    // Filter books by the current author
-    const booksByAuthor = books.filter((book) => book.author?.id === author._id)
-
-    const handleDelete = async () => {
-        try {
-            if (booksByAuthor.length > 0) {
-                // Check if the author has books assigned to them
-                alert('This author has book(s) assigned to it. Please delete the book(s) first.')
-                return
-            } else {
-                await axios.delete(`${API_BASE_URL}/api/authors/${id}`) // Call the DELETE route
-                alert('Author deleted successfully') // Notify the user
-                navigate('/authors') // Redirect to the authors list page
-            }
-        } catch (err) {
-            console.error('Error deleting author:', err)
-            alert('Failed to delete the author')
+    const handleDelete = () => {
+        if (books.length) {
+            toast.error(`${name} still has ${books.length} book(s). Delete or reassign them first.`)
+            return
         }
+        if (!window.confirm(`Delete ${name}? This can’t be undone.`)) return
+        remove.mutate(id, {
+            onSuccess: () => { toast.success(`Deleted ${name}`); navigate('/authors') },
+            onError: (err) => toast.error(errorMessage(err, 'Couldn’t delete the author.')),
+        })
     }
 
     return (
-        <>
-            <GoBackButton />
-            <h1>{author.firstName} {author.lastName}</h1>
-            <p><strong>Books:</strong></p>
-            <BookCover
-                books={booksByAuthor}
-                subtitle={(book) => `${book.author.firstName} ${book.author.lastName}`}
-            />
-            <EditButton onClick={() => navigate(`/authors/${author._id}/edit`)} />
-            <DeleteButton onClick={handleDelete} />
-        </>
+        <CollectionPage
+            backTo="/authors"
+            backLabel="All authors"
+            kicker="Author"
+            title={isLoading ? 'Loading…' : error ? 'Author not found' : name}
+            books={books}
+            isLoading={isLoading || booksLoading}
+            error={error}
+            emptyText="No books by this author yet."
+            actions={author && isOwner && (
+                <>
+                    <EditButton onClick={() => navigate(`/authors/${id}/edit`)} />
+                    <DeleteButton onClick={handleDelete} />
+                </>
+            )}
+        />
     )
 }

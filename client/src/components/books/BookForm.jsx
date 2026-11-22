@@ -1,211 +1,158 @@
-import React, { useState, useEffect } from 'react'
-import axios from 'axios'
-
+import React, { useEffect, useRef, useState } from 'react'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import * as bookObjects from './bookObjects'
-import { GetData } from '../../hooks/getData'
-import { useParams, useNavigate } from 'react-router-dom'
-import { TextInput, SelectInput, TextAreaInput } from '../../components/FormOptions'
-import { GoBackButton, SubmitButton } from '../Buttons'
-import FileUploader from '../../components/FileUpload'
-import { handleFormSubmit } from '../../hooks/handleFormSubmit'
-import styles from '../../stylesheets/Forms.css'
+import { useAuthors, useBook, useSaveBook, useSeriesList } from '../../api/hooks'
+import { apiUrl, errorMessage } from '../../api/client'
+import { TextInput, SelectInput, TextAreaInput } from '../FormOptions'
+import { GoBackButton, SubmitButton, buttonClass } from '../Buttons'
+import FileUploader from '../FileUpload'
+import { useToast } from '../Toast'
+import { resizeImage } from '../../utils/image'
+import styles from './BookForm.module.css'
 
-export default function BookForm({ setBooks }) {
+// Format and genres are stored as lists; the form edits the first value of each
+const first = (value) => (Array.isArray(value) ? value[0] || '' : value || '')
+const day = (d) => (d ? new Date(d).toISOString().slice(0, 10) : '')
+// Keep a value that isn't in the preset list (e.g. a Google category) selectable
+const withValue = (options, value) => (value && !options.includes(value) ? [value, ...options] : options)
+
+const empty = {
+    title: '', description: '', publishDate: '', pageCount: '', format: '', genres: '',
+    authorId: '', seriesId: '', seriesVolume: '', publisher: '', isbn: '',
+    readingStatus: '', startedAt: '', finishedAt: '', currentPage: '', rating: '',
+    shelves: '', owned: true, loanedTo: '', notes: '',
+}
+
+// New book (/books/new) and edit book (/books/:id/edit)
+export default function BookForm() {
     const { id } = useParams()
     const navigate = useNavigate()
-    const [formData, setFormData] = useState({
-        title: '',
-        description: '',
-        publishDate: '',
-        pageCount: '',
-        format: '',
-        genres: '',
-        authorId: '',
-        seriesId: '',
-        seriesVolume: '',
-        coverImagePath: ''
-    })
+    const toast = useToast()
+    const [form, setForm] = useState(empty)
+    const [cover, setCover] = useState({ dataUrl: '', remove: false })
+    const initialCover = useRef('')
 
-    const { data: book, error: bookError } = GetData('books', id)
-    const { data: authors, error: authorsError } = GetData('authors')
-    const { data: series, error: seriesError } = GetData('series')
+    const { data: book } = useBook(id)
+    const { data: authors = [] } = useAuthors()
+    const { data: series = [] } = useSeriesList()
+    const save = useSaveBook()
 
-    // Populate form data when book data is fetched
-    React.useEffect(() => {
-        if (book) {
-            setFormData({                   
-                title: book.title || '',
-                description: book.description || '',
-                publishDate: book.publishDate ? new Date(book.publishDate).toISOString().split('T')[0] : '',
-                pageCount: book.pageCount || '',
-                format: book.format || '',
-                genres: book.genres || '',
-                authorId: book.author?.id || '',
-                authorFirstName: book.author?.firstName || '',
-                authorLastName: book.author?.lastName || '',
-                seriesTitle: book.series?.title || '',
-                seriesId: book.series?.id || '',
-                seriesVolume: book.series?.volume || '',
-                coverImagePath: book.coverImagePath,
-                publisher: book.publisher || '',
-                isbn: book.isbn || '',
-                readingStatus: book.readingStatus || ''   
-            });
-        }
+    useEffect(() => {
+        if (!book) return
+        initialCover.current = book.coverUrl ? apiUrl(book.coverUrl) : ''
+        setForm({
+            title: book.title || '',
+            description: book.description || '',
+            publishDate: day(book.publishDate),
+            pageCount: book.pageCount ?? '',
+            format: first(book.format),
+            genres: first(book.genres),
+            authorId: book.author?.id || '',
+            seriesId: book.series?.id || '',
+            seriesVolume: book.series?.volume ?? '',
+            publisher: book.publisher || '',
+            isbn: book.isbn || '',
+            readingStatus: book.readingStatus || '',
+            startedAt: day(book.startedAt),
+            finishedAt: day(book.finishedAt),
+            currentPage: book.currentPage ?? '',
+            rating: book.rating || '',
+            shelves: (book.shelves || []).join(', '),
+            owned: book.owned !== false,
+            loanedTo: book.loanedTo || '',
+            notes: book.notes || '',
+        })
     }, [book])
 
-    const handleInputChange = (event) => {
-        const { name, value } = event.target
-        setFormData((prevData) => ({
-            ...prevData,
-            [name]: value
-        }))
-    }
+    const set = (changes) => setForm((prev) => ({ ...prev, ...changes }))
+    const onChange = (e) => set({ [e.target.name]: e.target.value })
 
-    const updateAuthorInfo = (authorId) => {
-        if (!authorId || authorId === formData.authorId) return // Prevent overwriting if no change
-        const selectedAuthor = authors.find((author) => author._id === authorId)
-        if (selectedAuthor) {
-            setFormData((prevData) => ({
-                ...prevData,
-                authorFirstName: selectedAuthor.firstName,
-                authorLastName: selectedAuthor.lastName,
-            }))
+    // FilePond reports the existing cover too; only react to a new file or a removal
+    const onCoverChange = async (items) => {
+        const item = items[0]
+        if (!item) { if (initialCover.current) setCover({ dataUrl: '', remove: true }); return }
+        if (typeof item.source === 'string' && item.source === initialCover.current) return
+        if (!(item.file instanceof Blob)) return
+        try {
+            setCover({ dataUrl: await resizeImage(item.file), remove: false })
+        } catch (err) {
+            toast.error(err.message)
         }
-    }
-
-    const updateSeriesInfo = (seriesId) => {
-        if (!seriesId || seriesId === formData.seriesId) return // Prevent overwriting if no change
-        const selectedSeries = series.find((series) => series._id === seriesId)
-        if (selectedSeries) {
-            setFormData((prevData) => ({
-                ...prevData,
-                seriesTitle: selectedSeries.title,
-            }))
-        }
-    }
-
-    const handleFileChange = (fileItems) => {
-        if (fileItems.length > 0 && fileItems[0].file instanceof Blob) {
-            const file = fileItems[0].file
-            const reader = new FileReader()
-            reader.readAsDataURL(file)
-            reader.onloadend = () => {
-                setFormData((prevData) => ({
-                    ...prevData,
-                    coverImagePath: reader.result
-                }))
-            }
-        // } else {
-        //     console.warn('Invalid file or no file selected. Using default cover image.')
-        //     // Set the default cover image if no valid file is uploaded
-        //     setFormData((prevData) => ({
-        //         ...prevData,
-        //         coverImagePath: '/no_book_cover_available.svg'
-        //     }))
-         }
     }
 
     const handleSubmit = (event) => {
         event.preventDefault()
-
-        const finalFormData = {
-            ...formData,
-            coverImagePath: formData.coverImagePath 
-        }
-
-        handleFormSubmit({
-            endpoint: '/api/books',
-            id,
-            formData: finalFormData,
-            setItems: setBooks,
-            successMessage: id ? 'Book updated successfully!' : 'Book created successfully!',
-            navigateTo: '/books',
-            navigate,
+        const data = { ...form, seriesVolume: form.seriesId ? form.seriesVolume : '' }
+        if (cover.dataUrl) data.coverImage = cover.dataUrl
+        if (cover.remove) data.removeCover = true
+        save.mutate({ id, data }, {
+            onSuccess: (saved) => {
+                toast.success(id ? 'Changes saved' : `Added “${saved.title}”`)
+                navigate(`/books/${saved._id}`)
+            },
+            onError: (err) => toast.error(errorMessage(err, 'Couldn’t save the book.')),
         })
     }
 
-    const formFields = [
-        { label: "Title", name: "title", type: "text", component: "TextInput" },
-        { label: "Publish Date", name: "publishDate", type: "date", component: "TextInput" },
-        { label: "Page Count", name: "pageCount", type: "number", component: "TextInput" },
-        { label: "Format", name: "format", component: "SelectInput", options: bookObjects.formats },
-        { label: "Genres", name: "genres", component: "SelectInput", options: bookObjects.genres },
-        { label: "Author", name: "authorId", component: "SelectInput", options: authors, customHandler: updateAuthorInfo, link: '/authors/new', linkText: 'Add New Author' },
-        { label: "Series", name: "seriesId", component: "SelectInput", options: series, customHandler: updateSeriesInfo },
-        { label: "Series Volume", name: "seriesVolume", type: "number", component: "TextInput" },
-        { label: "Publisher", name: "publisher", type: "text", component: "TextInput" },
-        { label: "ISBN", name: "isbn", type: "number", component: "TextInput" },
-        { label: "Cover Image", name: "coverImagePath", component: "FileUploader" },
-        { label: "Description", name: "description", component: "TextAreaInput" },
-        { label: "Reading Status", name: "readingStatus", component: "SelectInput", options: bookObjects.readingStatus },
-    ]
+    const cancelTo = id ? `/books/${id}` : '/library'
 
     return (
-        <>
-            <GoBackButton />
-            <h1>{id ? 'Edit Book' : 'New Book'}</h1>
-            <form onSubmit={handleSubmit}>
-                {formFields.map((field, index) => {
-                    switch (field.component) {
-                        case "TextInput":
-                            return (
-                                <TextInput
-                                    key={index}
-                                    label={field.label}
-                                    name={field.name}
-                                    type={field.type || "text"}
-                                    value={formData[field.name]}
-                                    onChange={handleInputChange}
-                                    placeholder={field.label}
-                                />
-                            )
-                        case "TextAreaInput":
-                            return (
-                                <TextAreaInput
-                                    key={index}
-                                    label={field.label}
-                                    name={field.name}
-                                    value={formData[field.name]}
-                                    onChange={handleInputChange}
-                                    placeholder={field.label}
-                                    rows="4"
-                                />
-                            )    
-                        case "SelectInput":
-                            return (
-                                <SelectInput
-                                    key={index}
-                                    label={field.label}
-                                    name={field.name}
-                                    value={formData[field.name]}
-                                    options={field.options}
-                                    onChange={(event) => {
-                                        const { value } = event.target
-                                        handleInputChange(event)
-                                        if (field.customHandler) field.customHandler(value)
-                                    }}
-                                    link={field.link}
-                                    linkText={field.linkText}
-                                />
-                            )
-                        case "FileUploader":
-                            return (
-                                <FileUploader
-                                    key={index}
-                                    files={formData[field.name]}
-                                    onUpdateFiles={handleFileChange}
-                                />
-                            )
-                        default:
-                            return null
-                    }
-                })}
-            <SubmitButton isEditing={!!id} object="Book" />
+        <div className={styles.page}>
+            <GoBackButton to={cancelTo} label={id ? 'Back to book' : 'All books'} />
+            <h1 className={styles.title}>{id ? 'Edit book' : 'New book'}</h1>
+
+            <form onSubmit={handleSubmit} className={styles.form}>
+                <fieldset className={styles.section}>
+                    <legend className={styles.legend}>Book</legend>
+                    <TextInput label="Title" name="title" value={form.title} onChange={onChange} required wide />
+                    <SelectInput label="Author" name="authorId" value={form.authorId} options={authors} onChange={onChange} link="/authors/new" linkText="Add a new author" />
+                    <SelectInput label="Series" name="seriesId" value={form.seriesId} options={series} onChange={onChange} placeholder="Not in a series" link="/series/new" linkText="Add a new series" />
+                    {form.seriesId && <TextInput label="Book number in series" name="seriesVolume" type="number" inputMode="numeric" min="0" value={form.seriesVolume} onChange={onChange} />}
+                </fieldset>
+
+                <fieldset className={styles.section}>
+                    <legend className={styles.legend}>Details</legend>
+                    <SelectInput label="Format" name="format" value={form.format} options={withValue(bookObjects.formats, form.format)} onChange={onChange} />
+                    <SelectInput label="Genre" name="genres" value={form.genres} options={withValue(bookObjects.genres, form.genres)} onChange={onChange} />
+                    <TextInput label="Published" name="publishDate" type="date" value={form.publishDate} onChange={onChange} />
+                    <TextInput label="Pages" name="pageCount" type="number" inputMode="numeric" min="0" value={form.pageCount} onChange={onChange} />
+                    <TextInput label="Publisher" name="publisher" value={form.publisher} onChange={onChange} />
+                    <TextInput label="ISBN" name="isbn" value={form.isbn} onChange={onChange} />
+                    <TextInput label="Shelves" name="shelves" value={form.shelves} onChange={onChange} placeholder="favorites, signed, to lend" hint="Separate with commas" wide />
+                </fieldset>
+
+                <fieldset className={styles.section}>
+                    <legend className={styles.legend}>Reading</legend>
+                    <SelectInput label="Status" name="readingStatus" value={form.readingStatus} options={bookObjects.readingStatus} onChange={onChange} placeholder="None" />
+                    <SelectInput label="Rating" name="rating" value={String(form.rating || '')} options={['1', '2', '3', '4', '5']} onChange={onChange} placeholder="Not rated" />
+                    <TextInput label="Started" name="startedAt" type="date" value={form.startedAt} onChange={onChange} />
+                    <TextInput label="Finished" name="finishedAt" type="date" value={form.finishedAt} onChange={onChange} />
+                    <TextInput label="Current page" name="currentPage" type="number" inputMode="numeric" min="0" value={form.currentPage} onChange={onChange} />
+                </fieldset>
+
+                <fieldset className={styles.section}>
+                    <legend className={styles.legend}>Your copy</legend>
+                    <label className={`${styles.check} ${styles.wide}`}>
+                        <input type="checkbox" checked={form.owned} onChange={(e) => set({ owned: e.target.checked })} />
+                        <span>I own this book <span className={styles.muted}>(untick to keep it on your wishlist)</span></span>
+                    </label>
+                    {form.owned && <TextInput label="Lent to" name="loanedTo" value={form.loanedTo} onChange={onChange} placeholder="Nobody" />}
+                    <TextAreaInput label="Private notes" name="notes" value={form.notes} onChange={onChange} rows={3} />
+                </fieldset>
+
+                <fieldset className={styles.section}>
+                    <legend className={styles.legend}>Cover and description</legend>
+                    <div className={styles.wide}>
+                        <FileUploader files={initialCover.current} onUpdateFiles={onCoverChange} />
+                    </div>
+                    <TextAreaInput label="Description" name="description" value={form.description} onChange={onChange} rows={6} />
+                </fieldset>
+
+                <div className={styles.actions}>
+                    <SubmitButton isEditing={Boolean(id)} object="Book" disabled={save.isPending || !form.title.trim()} />
+                    <Link to={cancelTo} className={buttonClass('secondary')}>Cancel</Link>
+                </div>
             </form>
-            {/* {authorsError && <p>Error fetching authors: {authorsError.message}</p>}
-            {seriesError && <p>Error fetching series: {seriesError.message}</p>}
-            {bookError && <p>Error fetching book: {bookError.message}</p>} */}
-        </>
+        </div>
     )
 }

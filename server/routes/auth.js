@@ -1,0 +1,64 @@
+const express = require('express')
+const User = require('../models/user')
+const { verifyPassword, hashPassword, signToken, requireOwner, loginRateLimit } = require('../lib/auth')
+
+const router = express.Router()
+
+// POST /api/auth/login { email, password } -> { token, user }
+router.post('/login', loginRateLimit, async (req, res) => {
+    const email = String(req.body?.email || '').trim().toLowerCase()
+    const password = String(req.body?.password || '')
+    if (!email || !password) return res.status(400).json({ message: 'Enter your email and password.' })
+
+    try {
+        const user = await User.findOne({ email }).select('+passwordHash')
+        const ok = user && (await verifyPassword(password, user.passwordHash))
+        if (!ok) return res.status(401).json({ message: 'That email and password don’t match.' })
+        res.json({ token: signToken(user), user: { id: user._id, email: user.email, name: user.name, role: user.role } })
+    } catch (err) {
+        console.error('Login error:', err)
+        res.status(500).json({ message: 'Sign-in failed. Try again.' })
+    }
+})
+
+// GET /api/auth/me -> the signed-in user, or 401
+router.get('/me', (req, res) => {
+    if (!req.user) return res.status(401).json({ message: 'Not signed in.' })
+    res.json({ user: req.user })
+})
+
+// GET /api/auth/status -> { setupNeeded } (true when no owner account exists yet)
+router.get('/status', async (req, res) => {
+    try {
+        res.json({ setupNeeded: (await User.estimatedDocumentCount()) === 0 })
+    } catch {
+        res.json({ setupNeeded: false })
+    }
+})
+
+// POST /api/auth/password { currentPassword, newPassword } (signed in) -> new token; signs out other devices
+router.post('/password', requireOwner, async (req, res) => {
+    const { currentPassword = '', newPassword = '' } = req.body || {}
+    if (String(newPassword).length < 10) return res.status(400).json({ message: 'Use at least 10 characters.' })
+    try {
+        const user = await User.findById(req.user.id).select('+passwordHash')
+        if (!user || !(await verifyPassword(String(currentPassword), user.passwordHash))) {
+            return res.status(401).json({ message: 'Your current password is wrong.' })
+        }
+        user.passwordHash = await hashPassword(String(newPassword))
+        user.tokenVersion = (user.tokenVersion || 0) + 1
+        await user.save()
+        res.json({ token: signToken(user) })
+    } catch (err) {
+        console.error('Password change error:', err)
+        res.status(500).json({ message: 'Couldn’t change the password. Try again.' })
+    }
+})
+
+// POST /api/auth/logout-everywhere (signed in) -> invalidates every token for this account
+router.post('/logout-everywhere', requireOwner, async (req, res) => {
+    await User.updateOne({ _id: req.user.id }, { $inc: { tokenVersion: 1 } })
+    res.json({ ok: true })
+})
+
+module.exports = router
