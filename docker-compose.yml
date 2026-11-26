@@ -1,14 +1,26 @@
-# Self-hosting on a NAS (Synology Container Manager or any Docker host).
-#   1. cp .env.docker.example .env      and fill in SESSION_SECRET (and optional API key)
-#   2. docker compose up -d --build
-#   3. docker compose exec app node scripts/create-owner.js you@example.com
-#   4. open http://<nas-ip>:8080
+# Library — self-hosted stack (Portainer, Synology Container Manager, or plain Docker).
+# Pulls the ready-made image from GitHub (ghcr.io/omegus100/library); nothing is built on the NAS.
 # Full guide: DOCKER.md
+#
+# Settings (Portainer: "Environment variables" on the stack; plain Docker: a .env file next to this):
+#   SESSION_SECRET  required  long random string (signs sign-ins)
+#   APP_PORT        8080      port on the NAS
+#   IMAGE_TAG       latest    or a version like 2.0.0
+#   MONGO_IMAGE     mongo:7   use mongo:4.4 if the database container keeps restarting
+#                             (older NAS CPUs without AVX can't run MongoDB 5+)
+#   MONGO_DATA      named volume "mongo-data", or a NAS folder like /volume1/docker/library/db
+#   COVERS_DATA     named volume "covers",     or a NAS folder like /volume1/docker/library/covers
+#   BACKUP_DATA     named volume "backups",    or a NAS folder like /volume1/docker/library/backups
+#   CLIENT_ORIGIN   only if another site calls this API (normally leave unset)
+#   GOOGLE_BOOKS_API_KEY  optional
+#
+# To build the image yourself instead of pulling it:
+#   docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
 
 services:
   app:
-    build: .
-    image: library-app:latest
+    image: ghcr.io/omegus100/library:${IMAGE_TAG:-latest}
+    container_name: library-app
     restart: unless-stopped
     depends_on:
       mongo:
@@ -17,27 +29,31 @@ services:
       - "${APP_PORT:-8080}:5000"
     environment:
       MONGO_URI: mongodb://mongo:27017/library
-      SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in .env}
+      SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET (a long random string)}
       CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost:8080}
       COVER_STORAGE: local
       COVER_DIR: /data/covers
       GOOGLE_BOOKS_API_KEY: ${GOOGLE_BOOKS_API_KEY:-}
     volumes:
-      - covers:/data/covers
+      - ${COVERS_DATA:-covers}:/data/covers
 
   mongo:
-    image: mongo:7
+    image: ${MONGO_IMAGE:-mongo:7}
+    container_name: library-mongo
     restart: unless-stopped
     volumes:
-      - mongo-data:/data/db
-      - ./backups:/backups
+      - ${MONGO_DATA:-mongo-data}:/data/db
+      - ${BACKUP_DATA:-backups}:/backups
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      # mongosh exists in MongoDB 6+, the older "mongo" shell in 4.x/5.x
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand(\"ping\").ok' || mongo --quiet --eval 'db.adminCommand(\"ping\").ok'"]
       interval: 10s
       timeout: 5s
       retries: 10
-    # Not published to the network: only the app container can reach it.
+      start_period: 20s
+    # No ports published: only the app container can reach the database.
 
 volumes:
   mongo-data:
   covers:
+  backups:
