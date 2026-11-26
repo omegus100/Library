@@ -45,12 +45,13 @@ services:
       - ${MONGO_DATA:-mongo-data}:/data/db
       - ${BACKUP_DATA:-backups}:/backups
     healthcheck:
-      # mongosh exists in MongoDB 6+, the older "mongo" shell in 4.x/5.x
-      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand(\"ping\").ok' || mongo --quiet --eval 'db.adminCommand(\"ping\").ok'"]
-      interval: 10s
-      timeout: 5s
+      # mongosh exists in MongoDB 6+, the older "mongo" shell in 4.x/5.x.
+      # Generous timings: on low-power NAS CPUs the shell alone can take 10+ seconds to start.
+      test: ["CMD-SHELL", "mongosh --quiet --norc --eval 'db.adminCommand(\"ping\").ok' 2>/dev/null || mongo --quiet --norc --eval 'db.adminCommand(\"ping\").ok'"]
+      interval: 30s
+      timeout: 30s
       retries: 10
-      start_period: 20s
+      start_period: 120s
     # No ports published: only the app container can reach the database.
 
 volumes:
