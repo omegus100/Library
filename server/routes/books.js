@@ -29,6 +29,12 @@ function present(book, req) {
     return out
 }
 
+// Full book for the book page: plus Calibre ebook info when linked
+async function withEbook(book, req) {
+    const ebook = await require('../lib/calibreSync').ebookFor(book._id)
+    return { ...present(book, req), ...(ebook ? { ebook } : {}) }
+}
+
 // ---------- sorting ----------
 
 const compareText = (a, b) => String(a || '').localeCompare(String(b || ''), undefined, { sensitivity: 'base', numeric: true })
@@ -225,7 +231,7 @@ router.get('/:id', async (req, res) => {
     try {
         const book = await Books.byId(req.params.id)
         if (!book) return res.status(404).json({ message: 'Book not found' })
-        res.json(present(book, req))
+        res.json(await withEbook(book, req))
     } catch (err) {
         sendError(res, err, 'Failed to fetch book')
     }
@@ -256,7 +262,7 @@ const update = async (req, res) => {
         await applyCover(book, req.body || {})
         if (!book.owner) book.owner = req.user.id
         await Books.save(book)
-        res.json(present(await Books.byId(book._id), req))
+        res.json(await withEbook(await Books.byId(book._id), req))
     } catch (err) {
         sendError(res, err, 'Failed to update book')
     }
@@ -293,7 +299,7 @@ router.post('/:id/refresh', requireOwner, async (req, res) => {
             try { book.coverImagePath = await covers.store(await google.fetchCover(match.coverUrl), book._id); filled.push('cover') } catch { /* skip */ }
         }
         await Books.save(book)
-        res.json({ book: present(await Books.byId(book._id), req), filled })
+        res.json({ book: await withEbook(await Books.byId(book._id), req), filled })
     } catch (err) {
         if (err instanceof google.LookupError) return res.status(err.status).json({ message: err.message })
         sendError(res, err, 'Failed to refresh details')

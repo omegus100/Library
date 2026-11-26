@@ -74,6 +74,18 @@ Build from source instead: `docker compose -f docker-compose.yml -f docker-compo
 | `IMAGE_TAG` | `latest` | Image version |
 | `TZ` | `UTC` | Timezone |
 | `GOOGLE_BOOKS_API_KEY` | — | Avoids Google's shared search limit |
+| `CALIBRE_LIBRARY_PATH` | — | Calibre library folder, mounted read-only at `/calibre` |
+
+## Calibre ebooks (optional)
+
+The app can mark which books you also have as ebooks and add your Calibre ebooks to the catalog. It only reads the Calibre library (mounted read-only) and never changes it.
+
+1. In the stack's environment variables, add your Calibre library folder (the one with `metadata.db`), e.g.
+   `CALIBRE_LIBRARY_PATH=/volume1/Media/Books`. Then **Update the stack**.
+2. In the app: **Settings → Calibre ebooks**. The folder is already `/calibre`. Optionally enter your Calibre-Web address (e.g. `http://your-nas:8083`) for "Read in Calibre-Web" links. Click **Turn on and sync**.
+3. Books you already have get "eBook" added and a Calibre cover if they had none. The rest are listed under **Not in your library yet**, where you pick which to add.
+
+It syncs again every 6 hours, or on **Sync now**. Ebooks removed from Calibre are flagged on the book page, never deleted. The address and folder are stored in the app's own settings, not in code.
 
 ## Health and outside access
 

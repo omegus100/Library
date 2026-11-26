@@ -68,6 +68,27 @@ const MIGRATIONS = [
             reading_goal INTEGER NOT NULL DEFAULT 0
         )`,
     ],
+    // 2: integrations (Calibre). Settings as JSON; one row per Calibre book, linked to a library book when matched.
+    [
+        `ALTER TABLE settings ADD COLUMN integrations TEXT NOT NULL DEFAULT '{}'`,
+        `CREATE TABLE IF NOT EXISTS calibre_books (
+            calibre_id INTEGER PRIMARY KEY,
+            uuid TEXT,
+            title TEXT NOT NULL,
+            authors TEXT,
+            series TEXT,
+            series_index REAL,
+            isbn TEXT,
+            formats TEXT NOT NULL DEFAULT '[]',
+            has_cover INTEGER NOT NULL DEFAULT 0,
+            last_modified TEXT,
+            book_id TEXT REFERENCES books(id) ON DELETE SET NULL,
+            matched_by TEXT,
+            missing INTEGER NOT NULL DEFAULT 0,
+            synced_at TEXT NOT NULL
+        )`,
+        `CREATE INDEX IF NOT EXISTS calibre_books_book ON calibre_books(book_id)`,
+    ],
 ]
 
 async function migrate(c) {

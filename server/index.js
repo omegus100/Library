@@ -8,6 +8,7 @@ db.init()
     .then(() => {
         console.log(`Database ready (${where})`)
         app.listen(config.port, () => console.log(`Listening on port ${config.port}`))
+        require('./lib/calibreSync').startSchedule()
     })
     .catch((err) => {
         console.error('Could not open the database:', err.message)

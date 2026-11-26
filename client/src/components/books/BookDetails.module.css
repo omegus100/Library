@@ -109,3 +109,8 @@
         grid-template-columns: minmax(0, 1fr);
     }
 }
+
+.muted {
+    color: var(--color-text-muted);
+    font-weight: var(--weight-regular, 400);
+}

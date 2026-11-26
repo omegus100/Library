@@ -150,3 +150,41 @@ export function useImport() {
         onSuccess: (result) => { if (!result.dryRun) invalidate(keys.books, keys.authors, ['stats']) },
     })
 }
+
+// ---------- Calibre (Settings → Integrations, owner only) ----------
+
+export const useCalibre = (enabled = true) =>
+    useQuery({ queryKey: ['integrations', 'calibre'], queryFn: () => get('/integrations/calibre'), enabled })
+
+export const useCalibreNotInLibrary = (enabled) =>
+    useQuery({ queryKey: ['integrations', 'calibre', 'not-in-library'], queryFn: () => get('/integrations/calibre/not-in-library'), enabled })
+
+export function useSaveCalibre() {
+    const qc = useQueryClient()
+    const invalidate = useInvalidate()
+    return useMutation({
+        mutationFn: (data) => api.put('/integrations/calibre', data).then((r) => r.data),
+        onSuccess: (cfg) => {
+            qc.setQueryData(['integrations', 'calibre'], cfg)
+            invalidate(['integrations', 'calibre', 'not-in-library'], keys.books)
+        },
+    })
+}
+
+export function useSyncCalibre() {
+    const invalidate = useInvalidate()
+    return useMutation({
+        mutationFn: () => api.post('/integrations/calibre/sync').then((r) => r.data),
+        onSettled: () => invalidate(['integrations'], keys.books),
+    })
+}
+
+export function useAddFromCalibre() {
+    const invalidate = useInvalidate()
+    return useMutation({
+        mutationFn: (ids) => api.post('/integrations/calibre/add', { ids }).then((r) => r.data),
+        onSuccess: () => invalidate(['integrations'], keys.books, keys.authors, keys.seriesList, ['stats']),
+    })
+}
+
+export const testCalibre = (path) => api.post('/integrations/calibre/test', { path }).then((r) => r.data)

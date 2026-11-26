@@ -33,6 +33,7 @@ app.use('/api/books', require('./routes/books'))
 app.use('/api/authors', require('./routes/authors'))
 app.use('/api/series', require('./routes/series'))
 app.use('/api/lookup', require('./routes/lookup'))
+app.use('/api/integrations', require('./routes/integrations'))
 app.use('/api', require('./routes/stats'))
 app.use('/api', require('./routes/data'))
 

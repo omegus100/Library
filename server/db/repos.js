@@ -109,6 +109,18 @@ const settings = {
         await run('INSERT INTO settings (id, reading_goal) VALUES (1, ?) ON CONFLICT(id) DO UPDATE SET reading_goal = excluded.reading_goal', [goal])
         return settings.get()
     },
+    // Integration settings, e.g. { calibre: { enabled, path, webUrl, lastSync, lastResult } }
+    async integrations() {
+        const r = await get('SELECT integrations FROM settings WHERE id = 1')
+        try { return JSON.parse(r?.integrations || '{}') || {} } catch { return {} }
+    },
+    // Merge `patch` into one integration's settings and return the new value
+    async setIntegration(name, patch) {
+        const all = await settings.integrations()
+        all[name] = { ...(all[name] || {}), ...patch }
+        await run('INSERT INTO settings (id, integrations) VALUES (1, ?) ON CONFLICT(id) DO UPDATE SET integrations = excluded.integrations', [JSON.stringify(all)])
+        return all[name]
+    },
 }
 
 module.exports = { users, authors, series, settings }

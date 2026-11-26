@@ -10,6 +10,8 @@
 #   IMAGE_TAG       latest         or a version like 2.0.0
 #   TZ              UTC            timezone, e.g. America/New_York
 #   GOOGLE_BOOKS_API_KEY           optional
+#   CALIBRE_LIBRARY_PATH           optional: your Calibre library folder (the one with metadata.db), e.g. /volume1/Media/Books
+#                                  Mounted read-only at /calibre. Turn it on in the app: Settings → Calibre ebooks.
 
 services:
   library:
@@ -28,6 +30,9 @@ services:
       GOOGLE_BOOKS_API_KEY: ${GOOGLE_BOOKS_API_KEY:-}
     volumes:
       - ${DATA_PATH:-library-data}:/data
+      # Calibre library, read-only (an empty placeholder when CALIBRE_LIBRARY_PATH isn't set)
+      - ${CALIBRE_LIBRARY_PATH:-calibre-none}:/calibre:ro
 
 volumes:
   library-data:
+  calibre-none:

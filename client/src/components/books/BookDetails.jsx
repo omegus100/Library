@@ -72,6 +72,12 @@ export default function BookDetails() {
     const facts = [
         seriesId && { label: 'Series', value: <Link to={`/series/${seriesId}`}>{book.series.title}{book.series.volume ? ` · Book ${book.series.volume}` : ''}</Link> },
         book.format?.length > 0 && { label: 'Format', value: <LinkList items={book.format} to={(f) => `/format/${encodeURIComponent(f)}`} /> },
+        book.ebook && {
+            label: 'Ebook',
+            value: book.ebook.missing
+                ? <span className={styles.muted}>No longer in Calibre</span>
+                : <>{book.ebook.formats.join(', ') || 'In Calibre'}{book.ebook.link && <> · <a href={book.ebook.link} target="_blank" rel="noreferrer">Read in Calibre-Web ↗</a></>}</>,
+        },
         book.genres?.length > 0 && { label: book.genres.length > 1 ? 'Genres' : 'Genre', value: <LinkList items={book.genres} to={(g) => `/genres/${encodeURIComponent(g.toLowerCase())}`} /> },
         book.pageCount && { label: 'Pages', value: book.pageCount },
         book.publishDate && { label: 'Published', value: formatDate(book.publishDate) },

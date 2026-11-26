@@ -6,6 +6,7 @@ import { useImport } from '../api/hooks'
 import { useToast } from '../components/Toast'
 import { TextInput } from '../components/FormOptions'
 import { buttonClass } from '../components/Buttons'
+import CalibreSettings from './CalibreSettings'
 import styles from './Settings.module.css'
 
 const readTheme = () => { try { return localStorage.getItem('theme') || 'system' } catch { return 'system' } }
@@ -61,6 +62,8 @@ export default function Settings() {
                     <p className={styles.muted}>You’re browsing as a visitor. <Link to="/login?next=/settings">Sign in</Link> to add or change books.</p>
                 )}
             </section>
+
+            {isOwner && <CalibreSettings />}
 
             {isOwner && <DataSection />}
 
