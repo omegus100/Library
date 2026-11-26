@@ -51,9 +51,9 @@ export default function BookDetails() {
     const handleRefresh = () =>
         refresh.mutate(id, {
             onSuccess: ({ filled }) => toast.success(filled.length
-                ? `Filled in ${filled.map((f) => FIELD_NAMES[f] || f).join(', ')} from Google Books`
+                ? `Filled in ${filled.map((f) => FIELD_NAMES[f] || f).join(', ')}`
                 : 'Nothing missing: your details are already complete'),
-            onError: (err) => toast.error(errorMessage(err, 'Couldn’t reach Google Books.')),
+            onError: (err) => toast.error(errorMessage(err, 'Couldn’t look up details.')),
         })
 
     if (isLoading) return <div className={styles.page}><GoBackButton to="/library" label="All books" /><DetailSkeleton /></div>

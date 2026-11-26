@@ -34,6 +34,7 @@ app.use('/api/authors', require('./routes/authors'))
 app.use('/api/series', require('./routes/series'))
 app.use('/api/lookup', require('./routes/lookup'))
 app.use('/api/integrations', require('./routes/integrations'))
+app.use('/api/covers', require('./routes/covers'))
 app.use('/api', require('./routes/stats'))
 app.use('/api', require('./routes/data'))
 

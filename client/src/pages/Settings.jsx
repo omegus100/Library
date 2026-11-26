@@ -7,6 +7,8 @@ import { useToast } from '../components/Toast'
 import { TextInput } from '../components/FormOptions'
 import { buttonClass } from '../components/Buttons'
 import CalibreSettings from './CalibreSettings'
+import ImportPreview from './ImportPreview'
+import CoverFinder from './CoverFinder'
 import styles from './Settings.module.css'
 
 const readTheme = () => { try { return localStorage.getItem('theme') || 'system' } catch { return 'system' } }
@@ -153,11 +155,15 @@ function DataSection() {
         })
     }
 
-    const runImport = () =>
-        importer.mutate({ csv, dryRun: false }, {
+    const reset = () => { setPreview(null); setCsv(''); setFileName('') }
+    const runImport = ({ wishlist, fillExisting }) =>
+        importer.mutate({ csv, dryRun: false, wishlist, fillExisting }, {
             onSuccess: (r) => {
-                toast.success(`Imported ${r.created} book${r.created === 1 ? '' : 's'}${r.skipped.length ? `, skipped ${r.skipped.length}` : ''}`)
-                setPreview(null); setCsv(''); setFileName('')
+                const parts = [`Imported ${r.created} book${r.created === 1 ? '' : 's'}`]
+                if (r.wishlistCount) parts.push(`${r.wishlistCount} on the wishlist`)
+                if (r.fill.count && fillExisting) parts.push(`filled in ${r.fill.count}`)
+                toast.success(parts.join(', '))
+                reset()
             },
             onError: (err) => toast.error(errorMessage(err, 'Import failed.')),
         })
@@ -179,43 +185,18 @@ function DataSection() {
                 <h3 className={styles.h3}>Import</h3>
                 <p className={styles.muted}>
                     From Goodreads: <em>My Books → Import and export → Export library</em>, then pick that CSV here. This app’s own CSV export works too.
-                    Books you already have are skipped; nothing existing is changed.
+                    Rated books are marked read; to-read, want-to-buy and potential-reads go to your wishlist. Books you already have aren’t added twice.
                 </p>
                 <label className={buttonClass('secondary')} style={{ alignSelf: 'flex-start' }}>
                     Choose CSV file…
                     <input type="file" accept=".csv,text/csv" onChange={onFile} className="sr-only" />
                 </label>
                 {fileName && <span className={styles.muted}>{fileName}</span>}
-                {importer.isPending && <span className={styles.muted}>Reading…</span>}
-                {preview?.dryRun && (
-                    <div className={styles.preview}>
-                        <p>
-                            <strong>{preview.created}</strong> new book{preview.created === 1 ? '' : 's'} to add
-                            {preview.skipped.length > 0 && <>, <strong>{preview.skipped.length}</strong> skipped</>}.
-                        </p>
-                        {preview.items.length > 0 && (
-                            <ul className={styles.previewList}>
-                                {preview.items.slice(0, 10).map((b, i) => <li key={i}>{b.title}{b.author ? ` — ${b.author}` : ''}</li>)}
-                                {preview.created > 10 && <li className={styles.muted}>…and {preview.created - 10} more</li>}
-                            </ul>
-                        )}
-                        {preview.skipped.length > 0 && (
-                            <details>
-                                <summary className={styles.muted}>Skipped</summary>
-                                <ul className={styles.previewList}>
-                                    {preview.skipped.slice(0, 50).map((s, i) => <li key={i}>{s.title}: {s.reason}</li>)}
-                                </ul>
-                            </details>
-                        )}
-                        <div className={styles.row}>
-                            <button type="button" className={buttonClass('primary')} onClick={runImport} disabled={!preview.created || importer.isPending}>
-                                Import {preview.created} book{preview.created === 1 ? '' : 's'}
-                            </button>
-                            <button type="button" className={buttonClass('secondary')} onClick={() => { setPreview(null); setCsv(''); setFileName('') }}>Cancel</button>
-                        </div>
-                    </div>
-                )}
+                {importer.isPending && !preview && <span className={styles.muted}>Reading…</span>}
+                {preview?.dryRun && <ImportPreview key={fileName} preview={preview} busy={importer.isPending} onImport={runImport} onCancel={reset} />}
             </div>
+
+            <CoverFinder />
         </section>
     )
 }

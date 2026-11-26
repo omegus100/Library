@@ -121,4 +121,12 @@ async function readCover(folder, bookPath) {
     }
 }
 
-module.exports = { DEFAULT_PATH, CalibreError, readBooks, test, readCover }
+// Cover for one Calibre book id (looks up its folder in metadata.db) -> { buffer, contentType } or null
+async function readCoverById(folder, calibreId) {
+    const db = open(folder)
+    let row
+    try { row = db.prepare('SELECT path, has_cover FROM books WHERE id = ?').get(calibreId) } finally { db.close() }
+    return row && Number(row.has_cover) === 1 ? readCover(folder, row.path) : null
+}
+
+module.exports = { DEFAULT_PATH, CalibreError, readBooks, test, readCover, readCoverById }

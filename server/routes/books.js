@@ -276,29 +276,45 @@ router.post('/:id/refresh', requireOwner, async (req, res) => {
         const book = await Books.byId(req.params.id, { cover: true })
         if (!book) return res.status(404).json({ message: 'Book not found' })
 
-        let results = book.isbn ? await google.byIsbn(book.isbn) : []
-        if (!results.length) {
-            const who = [book.author?.firstName, book.author?.lastName].filter(Boolean).join(' ')
-            results = await google.search(`intitle:"${book.title}"${who ? ` inauthor:"${who}"` : ''}`)
+        // Details from Google Books (may be rate-limited: then only the cover search below runs)
+        let match = null
+        let googleError = null
+        try {
+            let results = book.isbn ? await google.byIsbn(book.isbn) : []
+            if (!results.length) {
+                const who = [book.author?.firstName, book.author?.lastName].filter((x) => x && x !== '-').join(' ')
+                results = await google.search(`intitle:"${book.title}"${who ? ` inauthor:"${who}"` : ''}`)
+            }
+            match = results[0] || null
+        } catch (err) {
+            if (!(err instanceof google.LookupError)) throw err
+            googleError = err
         }
-        const match = results[0]
-        if (!match) return res.status(404).json({ message: 'No match found on Google Books.' })
 
         const filled = []
         const isEmpty = (v) => v === undefined || v === null || v === '' || (Array.isArray(v) && !v.length)
         const fill = (field, value, transform = (x) => x) => {
             if (isEmpty(book[field]) && !isEmpty(value)) { book[field] = transform(value); filled.push(field) }
         }
-        fill('description', match.description)
-        fill('publisher', match.publisher)
-        fill('pageCount', match.pageCount)
-        fill('isbn', match.isbn, normIsbn)
-        fill('publishDate', match.publishDate, toDate)
-        fill('genres', match.genres)
-        if (!book.coverImagePath && match.coverUrl) {
-            try { book.coverImagePath = await covers.store(await google.fetchCover(match.coverUrl), book._id); filled.push('cover') } catch { /* skip */ }
+        if (match) {
+            fill('description', match.description)
+            fill('publisher', match.publisher)
+            fill('pageCount', match.pageCount)
+            fill('isbn', match.isbn, normIsbn)
+            fill('publishDate', match.publishDate, toDate)
+            fill('genres', match.genres)
+            if (!book.coverImagePath && match.coverUrl) {
+                try { book.coverImagePath = await covers.store(await google.fetchCover(match.coverUrl), book._id); filled.push('cover') } catch { /* try the other sources */ }
+            }
         }
-        await Books.save(book)
+        // No cover yet: Calibre, then Open Library (Google was already tried above)
+        if (!book.coverImagePath) {
+            const found = await require('../lib/coverFinder').find(book, { googleBlocked: true })
+            if (found) { book.coverImagePath = await covers.store(found.image, book._id); filled.push('cover') }
+        }
+        if (!filled.length && googleError) return res.status(googleError.status).json({ message: googleError.message })
+        if (!filled.length && !match) return res.status(404).json({ message: 'No match found on Google Books or Open Library.' })
+        if (filled.length) await Books.save(book)
         res.json({ book: await withEbook(await Books.byId(book._id), req), filled })
     } catch (err) {
         if (err instanceof google.LookupError) return res.status(err.status).json({ message: err.message })

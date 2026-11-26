@@ -146,8 +146,8 @@ export function useSaveSettings() {
 export function useImport() {
     const invalidate = useInvalidate()
     return useMutation({
-        mutationFn: ({ csv, dryRun }) => api.post('/import', { csv, dryRun }).then((r) => r.data),
-        onSuccess: (result) => { if (!result.dryRun) invalidate(keys.books, keys.authors, ['stats']) },
+        mutationFn: (body) => api.post('/import', body).then((r) => r.data),
+        onSuccess: (result) => { if (!result.dryRun) invalidate(keys.books, keys.authors, keys.seriesList, ['stats'], ['covers']) },
     })
 }
 
