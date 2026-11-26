@@ -9,7 +9,8 @@ name: Docker image
 
 on:
   push:
-    branches: [main]
+    # main -> :latest; docker-* branches -> a test tag named after the branch
+    branches: [main, 'docker-*']
     tags: ['v*']
   workflow_dispatch: # "Run workflow" button in the Actions tab, for any branch
 
