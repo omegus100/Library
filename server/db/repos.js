@@ -1,7 +1,12 @@
 // Users, authors, series and settings. Plain objects in, plain objects out (API shape: _id, camelCase).
 const { all, get, run, newId, now } = require('./index')
 
-const key = (s) => String(s || '').trim().replace(/\./g, '').replace(/\s+/g, ' ').toLowerCase()
+const { fold } = require('../lib/match')
+
+// Series names ignore case, accents, punctuation and a leading The/A/An ("Reckoners" = "The Reckoners")
+const seriesKey = (s) => fold(s).replace(/^\s*(the|a|an)\s+/, '').replace(/[^a-z0-9]/g, '')
+// Author first names compare without case, accents, dots or spaces ("George R. R." = "George R.R.")
+const key = (s) => fold(s).replace(/[^a-z0-9]/g, '')
 
 // ---------- users ----------
 
@@ -93,6 +98,16 @@ const series = {
         const a = authorId !== undefined ? authorId || null : current.author?.id || null
         await run('UPDATE series SET title = ?, author_id = ? WHERE id = ?', [t, a, id])
         return series.byId(id)
+    },
+    // Same name by the same author (or a series with no author set), else a new series.
+    // Names compare loosely: case, accents, punctuation and a leading The/A/An are ignored ("Reckoners" = "The Reckoners").
+    async findOrCreate(title, authorId, owner) {
+        const t = String(title || '').replace(/\s+/g, ' ').trim()
+        if (!t) return null
+        const k = seriesKey(t)
+        const rows = await all('SELECT id, title, author_id FROM series WHERE author_id = ? OR author_id IS NULL ORDER BY author_id IS NULL', [authorId || ''])
+        const row = rows.find((r) => seriesKey(r.title) === k)
+        return row ? series.byId(row.id) : series.create({ title: t, authorId, owner })
     },
     bookCount: async (id) => Number((await get('SELECT COUNT(*) n FROM books WHERE series_id = ?', [id])).n),
     remove: (id) => run('DELETE FROM series WHERE id = ?', [id]),

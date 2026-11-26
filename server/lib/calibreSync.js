@@ -29,45 +29,10 @@ async function getConfig() {
 // Calibre-Web deep link, e.g. http://nas:8083/book/12 (only when an address is set)
 const linkFor = (webUrl, calibreId) => (webUrl ? `${webUrl.replace(/\/+$/, '')}/book/${calibreId}` : null)
 
-// ---------- matching ----------
+// ---------- matching (shared with the Goodreads import) ----------
 
-const fold = (s) => String(s || '').normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase()
-// Main title only: drop subtitles and "(Series #1)" tails, leading articles and punctuation
-const titleKey = (t) => fold(t).split(/[:(\[]/)[0].replace(/^\s*(the|a|an)\s+/, '').replace(/[^a-z0-9]/g, '')
-const surname = (name) => fold(String(name || '').split(',')[0].trim().split(/\s+/).pop()).replace(/[^a-z0-9]/g, '')
-
-function isbn13(v) {
-    const s = String(v || '').replace(/[^0-9Xx]/g, '').toUpperCase()
-    if (s.length === 13) return s
-    if (s.length !== 10) return ''
-    const core = `978${s.slice(0, 9)}`
-    const sum = [...core].reduce((acc, d, i) => acc + Number(d) * (i % 2 ? 3 : 1), 0)
-    return core + ((10 - (sum % 10)) % 10)
-}
-
-// Index of library books for matching; add() keeps it current while adding
-function libraryIndex(books) {
-    const byIsbn = new Map()
-    const byTitle = new Map()
-    const index = {
-        add(b) {
-            const i = isbn13(b.isbn)
-            if (i && !byIsbn.has(i)) byIsbn.set(i, b._id)
-            const last = surname(b.author?.lastName)
-            const key = `${titleKey(b.title)}|${last}`
-            if (titleKey(b.title) && last && !byTitle.has(key)) byTitle.set(key, b._id)
-        },
-        match(item) {
-            const i = isbn13(item.isbn)
-            if (i && byIsbn.has(i)) return { bookId: byIsbn.get(i), by: 'isbn' }
-            const key = `${titleKey(item.title)}|${surname(item.authors?.[0])}`
-            if (byTitle.has(key)) return { bookId: byTitle.get(key), by: 'title' }
-            return null
-        },
-    }
-    books.forEach(index.add)
-    return index
-}
+const { libraryIndex } = require('./match')
+const asItem = (item) => ({ title: item.title, isbn: item.isbn, author: item.authors?.[0] })
 
 // ---------- sync ----------
 
@@ -121,7 +86,7 @@ async function runSync() {
             let bookId = prev?.book_id || null
             let by = prev?.matched_by || null
             if (!bookId) {
-                const m = index.match(item)
+                const m = index.match(asItem(item))
                 if (m) { bookId = m.bookId; by = m.by; newlyLinked.push({ bookId, item }) }
             }
             statements.push({
@@ -187,12 +152,11 @@ async function addToLibrary(ids, owner) {
     const open = new Set((await notInLibrary()).map((r) => r.calibreId))
     const items = calibre.readBooks(cfg.path).filter((i) => wanted.has(i.calibreId) && open.has(i.calibreId))
     const index = libraryIndex(await Books.summary())
-    const seriesByKey = new Map((await Series.list()).map((s) => [`${fold(s.title)}|${s.author?.id || ''}`, s._id]))
     let added = 0
     let linked = 0
 
     for (const item of items) {
-        const existing = index.match(item) // added by hand since the last sync? link instead of duplicating
+        const existing = index.match(asItem(item)) // added by hand since the last sync? link instead of duplicating
         if (existing) {
             await batch([{ sql: 'UPDATE calibre_books SET book_id = ?, matched_by = ? WHERE calibre_id = ?', args: [existing.bookId, existing.by, item.calibreId] }])
             await enrich(existing.bookId, item, cfg.path)
@@ -201,15 +165,7 @@ async function addToLibrary(ids, owner) {
         }
 
         const author = item.authors[0] ? await Authors.findOrCreateByName(item.authors[0], owner) : null
-        let seriesId = null
-        if (item.series) {
-            const key = `${fold(item.series)}|${author?._id || ''}`
-            seriesId = seriesByKey.get(key) || seriesByKey.get(`${fold(item.series)}|`)
-            if (!seriesId) {
-                seriesId = (await Series.create({ title: item.series, authorId: author?._id, owner }))._id
-                seriesByKey.set(key, seriesId)
-            }
-        }
+        const seriesId = item.series ? (await Series.findOrCreate(item.series, author?._id, owner))._id : null
 
         const book = {
             _id: newId(),
@@ -273,4 +229,4 @@ function startSchedule() {
     setInterval(tick, SYNC_EVERY_MS).unref()
 }
 
-module.exports = { getConfig, linkFor, sync, notInLibrary, addToLibrary, ebookFor, startSchedule, isbn13, titleKey, surname }
+module.exports = { getConfig, linkFor, sync, notInLibrary, addToLibrary, ebookFor, startSchedule }
