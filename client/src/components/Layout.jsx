@@ -1,5 +1,6 @@
 import React from 'react'
-import { Link, NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import ErrorBoundary from './ErrorBoundary'
 import ThemeToggle from './ThemeToggle'
 import { useAuth } from '../auth/AuthContext'
 import styles from '../stylesheets/Layout.module.css'
@@ -20,6 +21,7 @@ const ICONS = {
 // App shell (Round 3): slim header. Library is home; Reading (stats) and Settings are secondary.
 export default function Layout() {
     const { isOwner, checking } = useAuth()
+    const location = useLocation()
 
     return (
         <div className={styles.shell}>
@@ -54,7 +56,9 @@ export default function Layout() {
             </header>
 
             <main id="main" className={styles.main}>
-                <Outlet />
+                <ErrorBoundary resetKey={location.pathname}>
+                    <Outlet />
+                </ErrorBoundary>
             </main>
         </div>
     )
