@@ -2,8 +2,8 @@
 const path = require('path')
 const fs = require('fs')
 const express = require('express')
-const mongoose = require('mongoose')
 const cors = require('cors')
+const { ping } = require('./db')
 const config = require('./config')
 const google = require('./lib/google')
 const { attachUser } = require('./lib/auth')
@@ -23,9 +23,9 @@ app.use(express.json({ limit: '10mb' })) // cover uploads arrive as data URLs
 app.use(attachUser)
 
 // Health check for Docker / uptime monitors
-app.get('/api/health', (req, res) => {
-    const db = mongoose.connection.readyState === 1 ? 'up' : 'down'
-    res.status(db === 'up' ? 200 : 503).json({ ok: db === 'up', db })
+app.get('/api/health', async (req, res) => {
+    const up = await ping()
+    res.status(up ? 200 : 503).json({ ok: up, db: up ? 'up' : 'down' })
 })
 
 app.use('/api/auth', require('./routes/auth'))

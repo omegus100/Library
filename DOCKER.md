@@ -1,84 +1,81 @@
 # Self-hosting with Docker (Portainer / Synology Container Manager)
 
-Two containers: **library-app** (website + API on one port) and **library-mongo** (the database).
-The app image is built by GitHub and published as **`ghcr.io/omegus100/library`** (Intel/AMD and ARM), so the NAS only pulls it.
+**One container** (`library`) serves the website and the API. All data is in **`/data`**:
 
-## One-time: make the image public
+```
+/data/library.db      the database (SQLite, one file)
+/data/covers/         cover images
+```
 
-After the first successful run of the **Docker image** workflow (GitHub → repo → Actions):
-GitHub → your profile → **Packages** → **library** → Package settings → *Change visibility* → **Public**.
-(Or keep it private and add `ghcr.io` with a GitHub token under Portainer → Registries.)
+Back up that folder and you've backed up everything. The image is built by GitHub and published as `ghcr.io/omegus100/library` (Intel/AMD and ARM), so the NAS only downloads it.
 
 ## Deploy with Portainer
 
-1. **Stacks → + Add stack**, name it `library`.
-2. Build method, either:
-   - **Repository:** URL `https://github.com/omegus100/Library`, reference `refs/heads/main`, compose path `docker-compose.yml`. Optionally turn on *GitOps updates* so Portainer redeploys when the repo changes.
-   - **Web editor:** paste the contents of `docker-compose.yml`.
-3. **Environment variables → Advanced mode**, paste the contents of `.env.docker.example` and fill in at least `SESSION_SECRET`. To keep data in a NAS share instead of Docker volumes, set e.g.
-   `MONGO_DATA=/volume1/docker/library/db`, `COVERS_DATA=/volume1/docker/library/covers`, `BACKUP_DATA=/volume1/docker/library/backups` (create those folders first).
-4. **Deploy the stack.** Both containers should turn *healthy* within a minute.
-5. Create your owner account: Containers → **library-app** → **>_ Console** → Connect (`/bin/sh`), then run
+1. On the NAS, create a folder for the data, e.g. `/volume1/docker/library`.
+   - *Bringing your existing books?* Copy `server/data/library.db` and the `server/data/covers` folder from your computer into it now (see "Your existing library" below).
+2. Portainer → **Stacks → + Add stack**, name `library`.
+3. Build method **Repository**: URL `https://github.com/omegus100/Library`, reference `refs/heads/main` (or the branch you're testing), compose path `docker-compose.yml`.
+   Or **Web editor** and paste `docker-compose.yml`.
+4. **Environment variables → Advanced mode**, paste and fill in:
    ```
-   node scripts/create-owner.js you@example.com
+   SESSION_SECRET=<a long random string>
+   DATA_PATH=/volume1/docker/library
+   PUID=1026
+   PGID=100
+   APP_PORT=8080
    ```
-6. Open `http://<nas-ip>:8080` and sign in.
+   `PUID`/`PGID` = the NAS user that should own the files (Synology: SSH in and run `id`, or use your admin user; 1026/100 is common). Leave `DATA_PATH` out to use a Docker volume instead of a folder.
+5. **Deploy the stack.** The container turns *healthy* in under a minute.
+6. Open `http://<nas-ip>:8080`.
+   - Imported your library? Sign in with your existing email and password.
+   - Starting fresh? Containers → **library** → **>_ Console** → Connect, run `node scripts/create-owner.js you@example.com`.
 
-**Database keeps restarting?** Older NAS processors (no AVX) can't run MongoDB 5 or newer. Set `MONGO_IMAGE=mongo:4.4` and redeploy (with a fresh/empty data volume).
+**Updating:** Stacks → library → **Pull and redeploy**. Pin a version with `IMAGE_TAG=2.0.0`.
 
-**Updating:** Portainer → Stacks → library → *Pull and redeploy* (or let GitOps do it). Pin a release with `IMAGE_TAG=2.0.0`.
+## Your existing library
+
+Your books, covers and account are already converted on your computer in `project/server/data/` (`library.db` + `covers/`). Copy both into the NAS folder **before the first start** (or stop the stack, copy, start again).
+
+Other ways in:
+- From a MongoDB backup (old version): copy the backup folder into `/data`, then in the container console:
+  `node scripts/import-mongo-backup.js /data/<backup-folder> --apply`
+- From a backup made by this version: `node scripts/restore-backup.js /data/backups/library-<date>`
+
+## Backups
+
+- **Simplest:** include the data folder in Hyper Backup / your NAS backup. (For a perfectly consistent copy, stop the container first, or use the script below.)
+- **Script (safe while running):** Containers → library → Console:
+  `node scripts/backup.js /data/backups` → `/data/backups/library-<date>/` (database tables as JSON + cover files).
+  Schedule it from DSM Task Scheduler: `docker exec library node scripts/backup.js /data/backups`
 
 ## Synology Container Manager (without Portainer)
 
-Container Manager → **Project → Create** → choose a folder (e.g. `/volume1/docker/library`), *Create docker-compose.yml* → paste `docker-compose.yml`. Put the settings in a `.env` file in that folder (from `.env.docker.example`), then **Build**/start.
+Container Manager → **Project → Create** → folder `/volume1/docker/library-stack` → *Create docker-compose.yml* → paste `docker-compose.yml`. Put the settings in a `.env` file in that folder (from `.env.docker.example`), then start.
 
 ## Plain Docker
 
 ```
-cp .env.docker.example .env        # fill in SESSION_SECRET
-docker compose up -d
-docker compose exec app node scripts/create-owner.js you@example.com
+docker run -d --name library -p 8080:5000 \
+  -e SESSION_SECRET=change-me -e PUID=1000 -e PGID=1000 \
+  -v /path/to/library-data:/data \
+  ghcr.io/omegus100/library:latest
 ```
 
-Build from source instead of pulling: `docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build`
+Build from source instead: `docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build`
 
-## Moving your library from Atlas to the NAS
+## Settings
 
-1. On your computer, back up the live database (from `server/`):
-   `node scripts/backup.js test` → creates `project/backups/test-<date>/`
-2. Copy that folder into the app container and restore it into the (empty) NAS database:
-   ```
-   docker cp ./backups/test-<date> library-app:/tmp/restore
-   docker exec library-app node scripts/restore-backup.js /tmp/restore
-   ```
-   (Portainer: copy the folder onto a NAS share mounted into the container, or use the console.)
-3. Move covers out of the database into files (the container already has `COVER_STORAGE=local`):
-   ```
-   docker exec library-app node scripts/move-covers-to-files.js          # preview
-   docker exec library-app node scripts/move-covers-to-files.js --apply
-   ```
-4. Create your owner account (step 5 above) if the backup didn't include one.
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `SESSION_SECRET` | (required) | Signs sign-ins. Keep it private and stable. |
+| `DATA_PATH` | `library-data` volume | Where `/data` lives on the NAS |
+| `PUID` / `PGID` | `1000` / `1000` | Owner of the files in the data folder |
+| `APP_PORT` | `8080` | Port on the NAS |
+| `IMAGE_TAG` | `latest` | Image version |
+| `TZ` | `UTC` | Timezone |
+| `GOOGLE_BOOKS_API_KEY` | — | Avoids Google's shared search limit |
 
-## Backups
+## Health and outside access
 
-The database container has a `/backups` folder (`BACKUP_DATA`). A dated, compressed dump:
-
-```
-docker exec library-mongo sh -c 'mongodump --db library --gzip --archive=/backups/library-$(date +%F).gz'
-```
-
-Schedule it in DSM → Control Panel → **Task Scheduler** (user-defined script, run as root), and include the backup and covers folders in Hyper Backup.
-
-Restore a dump:
-
-```
-docker exec library-mongo sh -c 'mongorestore --gzip --archive=/backups/library-YYYY-MM-DD.gz --drop'
-```
-
-## Health
-
-`GET /api/health` returns `{ "ok": true, "db": "up" }`. Both containers have health checks, shown in Portainer.
-
-## Reaching it from outside your home
-
-Put it behind DSM's reverse proxy (Control Panel → Login Portal → Advanced → Reverse Proxy) or your existing proxy, with HTTPS. The app needs no extra settings when the site and API share one address.
+`GET /api/health` → `{ "ok": true, "db": "up" }` (used by the container's health check).
+For access outside your home, put it behind DSM's reverse proxy (Control Panel → Login Portal → Advanced → Reverse Proxy) or your existing proxy, with HTTPS.

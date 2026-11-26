@@ -1,57 +1,58 @@
-// Read-only backup of the database in MONGO_URI to JSON files.
+// Read-only backup of the whole library (SQLite file or Turso) to a folder of JSON files,
+// plus a copy of the cover files when covers are stored as files.
 //
-//   node scripts/backup.js                    # database named in MONGO_URI (default "test")
-//   node scripts/backup.js myFirstDatabase    # another database on the same cluster
+//   node scripts/backup.js                 -> project/backups/library-<date>/
+//   node scripts/backup.js /some/folder    -> /some/folder/library-<date>/
+//   Docker: docker exec library node scripts/backup.js /data/backups
 //
-// Writes project/backups/<timestamp>/<collection>.json in Extended JSON (canonical),
-// so ObjectIds, Dates and number-vs-string types survive exactly. Never writes to the database.
-// Use this when mongodump isn't installed; mongodump works too.
+// Restore into an empty database with scripts/restore-backup.js.
+// (A local SQLite file can also simply be copied while the app is stopped.)
 
-require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') })
 const fs = require('fs')
 const path = require('path')
-const mongoose = require('mongoose')
-const { EJSON } = mongoose.mongo.BSON
+const config = require('../config')
+const db = require('../db')
+
+const TABLES = ['users', 'authors', 'series', 'books', 'settings']
 
 async function main() {
-  if (!process.env.MONGO_URI) {
-    console.error('MONGO_URI is not set (server/.env). Aborting.')
-    process.exit(1)
-  }
+    await db.init()
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-')
+    const base = process.argv[2] ? path.resolve(process.argv[2]) : path.join(__dirname, '..', '..', 'backups')
+    const outDir = path.join(base, `library-${stamp}`)
+    fs.mkdirSync(outDir, { recursive: true })
 
-  await mongoose.connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 15000 })
-  // Database: the argument, else MONGO_DB_NAME (as the server uses), else the one in MONGO_URI
-  const dbName = process.argv[2] || process.env.MONGO_DB_NAME
-  const db = dbName ? mongoose.connection.client.db(dbName) : mongoose.connection.db
-  console.log(`Connected. Database: "${db.databaseName}"`)
+    const summary = {}
+    for (const table of TABLES) {
+        const rows = await db.all(`SELECT * FROM ${table}`)
+        fs.writeFileSync(path.join(outDir, `${table}.json`), JSON.stringify(rows, null, 2))
+        summary[table] = rows.length
+        console.log(`  ${table}: ${rows.length}`)
+    }
 
-  const stamp = new Date().toISOString().replace(/[:.]/g, '-')
-  const outDir = path.join(__dirname, '..', '..', 'backups', `${db.databaseName}-${stamp}`)
-  fs.mkdirSync(outDir, { recursive: true })
+    // Cover files (COVER_STORAGE=local)
+    let files = 0
+    if (fs.existsSync(config.coverDir)) {
+        const target = path.join(outDir, 'covers')
+        fs.mkdirSync(target, { recursive: true })
+        for (const name of fs.readdirSync(config.coverDir)) {
+            fs.copyFileSync(path.join(config.coverDir, name), path.join(target, name))
+            files += 1
+        }
+        console.log(`  cover files: ${files}`)
+    }
 
-  const collections = (await db.listCollections({}, { nameOnly: true }).toArray())
-    .map((c) => c.name)
-    .filter((name) => !name.startsWith('system.'))
-    .sort()
-
-  const summary = {}
-  for (const name of collections) {
-    const docs = await db.collection(name).find({}).toArray()
-    fs.writeFileSync(path.join(outDir, `${name}.json`), EJSON.stringify(docs, null, 2, { relaxed: false }))
-    summary[name] = docs.length
-    console.log(`  ${name}: ${docs.length} document(s)`)
-  }
-
-  fs.writeFileSync(
-    path.join(outDir, '_summary.json'),
-    JSON.stringify({ database: db.databaseName, createdAt: new Date().toISOString(), collections: summary }, null, 2)
-  )
-  console.log(`\nBackup written to ${outDir}`)
-  await mongoose.disconnect()
+    fs.writeFileSync(path.join(outDir, '_summary.json'), JSON.stringify({
+        createdAt: new Date().toISOString(),
+        database: config.databaseUrl.replace(/\?.*$/, ''),
+        tables: summary,
+        coverFiles: files,
+    }, null, 2))
+    console.log(`\nBackup written to ${outDir}`)
+    db.close()
 }
 
-main().catch(async (err) => {
-  console.error('Backup failed:', err.message)
-  await mongoose.disconnect()
-  process.exit(1)
+main().catch((err) => {
+    console.error('Backup failed:', err.message)
+    process.exit(1)
 })

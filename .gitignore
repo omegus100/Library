@@ -125,3 +125,6 @@ server/uploads/
 
 # Local database backups (contain real data)
 /backups/
+
+# Local SQLite database and cover files (real data)
+/server/data/

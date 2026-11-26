@@ -4,15 +4,15 @@
 //      asks for the password (typed twice, hidden)
 //
 //   OWNER_PASSWORD='...' node scripts/create-owner.js you@example.com
-//      non-interactive (Docker / first boot)
+//      non-interactive
 //
-// Uses MONGO_URI (+ MONGO_DB_NAME) from server/.env, so it creates the owner in whichever
-// database the server uses. Run it once for the dev copy and once for production.
+// Uses DATABASE_URL (default: the local data/library.db). In Docker:
+//   docker exec -it library node scripts/create-owner.js you@example.com
 
 const readline = require('readline')
-const mongoose = require('mongoose')
 const config = require('../config')
-const User = require('../models/user')
+const db = require('../db')
+const { users: Users } = require('../db/repos')
 const { hashPassword } = require('../lib/auth')
 
 function askHidden(question) {
@@ -39,24 +39,21 @@ async function main() {
     }
     if (password.length < 10) { console.error('Use at least 10 characters.'); process.exit(1) }
 
-    await mongoose.connect(config.mongoUri, { dbName: config.mongoDbName, serverSelectionTimeoutMS: 15000 })
+    await db.init()
     const passwordHash = await hashPassword(password)
-    const existing = await User.findOne({ email })
+    const existing = await Users.byEmail(email)
     if (existing) {
-        existing.passwordHash = passwordHash
-        existing.role = 'owner'
-        existing.tokenVersion = (existing.tokenVersion || 0) + 1
-        await existing.save()
-        console.log(`Password reset for ${email} in database "${mongoose.connection.db.databaseName}".`)
+        await Users.setPassword(existing._id, passwordHash)
+        console.log(`Password reset for ${email}.`)
     } else {
-        await User.create({ email, passwordHash, role: 'owner' })
-        console.log(`Owner ${email} created in database "${mongoose.connection.db.databaseName}".`)
+        await Users.create({ email, passwordHash, role: 'owner' })
+        console.log(`Owner ${email} created.`)
     }
-    await mongoose.disconnect()
+    console.log(`Database: ${config.databaseUrl.replace(/\?.*$/, '')}`)
+    db.close()
 }
 
-main().catch(async (err) => {
+main().catch((err) => {
     console.error('Failed:', err.message)
-    await mongoose.disconnect()
     process.exit(1)
 })

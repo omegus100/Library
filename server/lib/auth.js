@@ -4,7 +4,7 @@
 // API are on different domains (Netlify + Render) — Safari blocks those cross-site cookies.
 const crypto = require('crypto')
 const config = require('../config')
-const User = require('../models/user')
+const { users: Users } = require('../db/repos')
 
 const b64url = (buf) => Buffer.from(buf).toString('base64url')
 
@@ -56,7 +56,7 @@ async function attachUser(req, res, next) {
     const payload = token && readToken(token)
     if (payload) {
         try {
-            const user = await User.findById(payload.sub).lean()
+            const user = await Users.byId(payload.sub)
             if (user && (user.tokenVersion || 0) === payload.v) {
                 req.user = { id: String(user._id), email: user.email, name: user.name, role: user.role }
             }

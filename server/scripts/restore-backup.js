@@ -1,50 +1,57 @@
-// Load a backup folder made by scripts/backup.js into an EMPTY database.
-// Used to move your library onto the NAS (or anywhere new).
+// Load a backup folder made by scripts/backup.js into an EMPTY database (SQLite file or Turso),
+// and copy its cover files into COVER_DIR.
 //
-//   node scripts/restore-backup.js ../backups/test-2026-11-21T08-28-55-592Z
+//   node scripts/restore-backup.js ../backups/library-2026-11-26T03-00-00-000Z
+//   Docker: docker exec library node scripts/restore-backup.js /data/backups/library-<date>
 //
-// Writes to the database in MONGO_URI (+ MONGO_DB_NAME). Refuses if it already has books,
-// authors or series (never overwrites). In Docker:
-//   docker compose cp ./backups/<folder> app:/tmp/restore
-//   docker compose exec app node scripts/restore-backup.js /tmp/restore
+// Refuses if the database already has books, authors, series or users (never overwrites).
+// For a MongoDB backup (from the old version), use scripts/import-mongo-backup.js instead.
 
 const fs = require('fs')
 const path = require('path')
-const mongoose = require('mongoose')
 const config = require('../config')
+const db = require('../db')
 
-const { EJSON } = mongoose.mongo.BSON
+const TABLES = ['users', 'authors', 'series', 'books', 'settings'] // parents before children
 
 async function main() {
     const dir = process.argv[2]
-    if (!dir || !fs.existsSync(dir)) {
-        console.error('Usage: node scripts/restore-backup.js <backup folder>')
+    if (!dir || !fs.existsSync(path.join(dir, 'books.json'))) {
+        console.error('Usage: node scripts/restore-backup.js <backup folder made by backup.js>')
         process.exit(1)
     }
-    await mongoose.connect(config.mongoUri, { dbName: config.mongoDbName, serverSelectionTimeoutMS: 15000 })
-    const db = mongoose.connection.db
-
-    for (const name of ['books', 'authors', 'series', 'users']) {
-        if ((await db.collection(name).estimatedDocumentCount()) > 0) {
-            console.error(`Database "${db.databaseName}" already has ${name}. Not overwriting. Aborting.`)
-            await mongoose.disconnect()
+    await db.init()
+    for (const table of ['users', 'authors', 'series', 'books']) {
+        if (Number((await db.get(`SELECT COUNT(*) n FROM ${table}`)).n) > 0) {
+            console.error(`The database already has ${table}. Not overwriting. Aborting.`)
+            db.close()
             process.exit(1)
         }
     }
 
-    const files = fs.readdirSync(dir).filter((f) => f.endsWith('.json') && !f.startsWith('_'))
-    for (const file of files) {
-        const docs = EJSON.parse(fs.readFileSync(path.join(dir, file), 'utf8'), { relaxed: false })
-        const name = path.basename(file, '.json')
-        if (docs.length) await db.collection(name).insertMany(docs)
-        console.log(`  ${name}: ${docs.length} restored`)
+    for (const table of TABLES) {
+        const file = path.join(dir, `${table}.json`)
+        if (!fs.existsSync(file)) continue
+        const rows = JSON.parse(fs.readFileSync(file, 'utf8'))
+        for (const row of rows) {
+            const cols = Object.keys(row)
+            await db.run(`INSERT INTO ${table} (${cols.join(', ')}) VALUES (${cols.map(() => '?').join(', ')})`, cols.map((c) => row[c]))
+        }
+        console.log(`  ${table}: ${rows.length} restored`)
     }
-    console.log(`\nRestored into "${db.databaseName}". Next: node scripts/create-owner.js you@example.com`)
-    await mongoose.disconnect()
+
+    const coverSrc = path.join(dir, 'covers')
+    if (fs.existsSync(coverSrc)) {
+        fs.mkdirSync(config.coverDir, { recursive: true })
+        const names = fs.readdirSync(coverSrc)
+        names.forEach((n) => fs.copyFileSync(path.join(coverSrc, n), path.join(config.coverDir, n)))
+        console.log(`  cover files: ${names.length} copied to ${config.coverDir}`)
+    }
+    console.log('\nRestore complete.')
+    db.close()
 }
 
-main().catch(async (err) => {
+main().catch((err) => {
     console.error('Restore failed:', err.message)
-    await mongoose.disconnect()
     process.exit(1)
 })

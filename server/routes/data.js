@@ -1,9 +1,9 @@
 const express = require('express')
-const Book = require('../models/book')
-const Author = require('../models/author')
+const Books = require('../db/books')
+const { authors: Authors, series: Series } = require('../db/repos')
 const csv = require('../lib/csv')
 const { requireOwner } = require('../lib/auth')
-const { toDate, toList } = require('./books').helpers
+const { toDate, toList, READING_STATUSES } = require('./books').helpers
 
 const router = express.Router()
 
@@ -17,12 +17,12 @@ const COLUMNS = ['Title', 'Author', 'Series', 'Series #', 'ISBN', 'Format', 'Gen
 // GET /api/export?format=json|csv (owner) -> download of the whole library (covers not included)
 router.get('/export', requireOwner, async (req, res) => {
     try {
-        const books = await Book.find({}, { coverImagePath: 0 }).sort({ title: 1 }).lean()
+        const books = await Books.allBooks()
         const stamp = new Date().toISOString().slice(0, 10)
         if (req.query.format === 'csv') {
             const rows = books.map((b) => ({
                 Title: b.title,
-                Author: [b.author?.firstName, b.author?.lastName].filter(Boolean).join(' '),
+                Author: [b.author?.firstName, b.author?.lastName].filter((x) => x && x !== '-').join(' '),
                 Series: b.series?.title || '',
                 'Series #': b.series?.volume ?? '',
                 ISBN: b.isbn || '',
@@ -45,9 +45,8 @@ router.get('/export', requireOwner, async (req, res) => {
             res.set('Content-Disposition', `attachment; filename="library-${stamp}.csv"`)
             return res.type('text/csv').send(csv.stringify(rows, COLUMNS))
         }
-        const authors = await Author.find({}).lean()
         res.set('Content-Disposition', `attachment; filename="library-${stamp}.json"`)
-        res.json({ exportedAt: new Date().toISOString(), books, authors })
+        res.json({ exportedAt: new Date().toISOString(), books, authors: await Authors.list(), series: await Series.list() })
     } catch (err) {
         console.error('Export failed:', err)
         res.status(500).json({ message: 'Export failed' })
@@ -87,7 +86,7 @@ function mapRow(r) {
         publishDate: toDate(r.Published),
         format: toList((r.Format || '').replace(/;/g, ',')),
         genres: toList((r.Genres || '').replace(/;/g, ',')),
-        readingStatus: Book.READING_STATUSES.includes(r.Status) ? r.Status : '',
+        readingStatus: READING_STATUSES.includes(r.Status) ? r.Status : '',
         startedAt: toDate(r.Started),
         finishedAt: toDate(r.Finished),
         currentPage: Number(r['Current Page']) || undefined,
@@ -100,7 +99,7 @@ function mapRow(r) {
     }
 }
 
-// POST /api/import { csv, dryRun } (owner) -> { created, skipped, wouldCreate }
+// POST /api/import { csv, dryRun } (owner) -> { created, skipped }
 // Accepts a Goodreads "Export Library" CSV or this app's CSV export. Never changes existing books.
 router.post('/import', requireOwner, express.json({ limit: '5mb' }), async (req, res) => {
     try {
@@ -109,21 +108,16 @@ router.post('/import', requireOwner, express.json({ limit: '5mb' }), async (req,
         if (!('Title' in rows[0])) return res.status(400).json({ message: 'That doesn’t look like a Goodreads or library CSV (no "Title" column).' })
 
         const dryRun = req.body?.dryRun !== false
-        const existing = await Book.find({}, { title: 1, isbn: 1, 'author.lastName': 1 }).lean()
+        const existing = await Books.summary()
         const seenIsbn = new Set(existing.map((b) => normIsbn(b.isbn)).filter(Boolean))
         const seenTitle = new Set(existing.map((b) => `${norm(b.title)}|${norm(b.author?.lastName)}`))
-        const authors = await Author.find({}).lean()
-        const authorKey = (first, last) => `${norm(first).replace(/\./g, '')}|${norm(last)}`
-        const authorMap = new Map(authors.map((a) => [authorKey(a.firstName, a.lastName), a]))
 
         const created = []
         const skipped = []
         for (const row of rows) {
             const b = mapRow(row)
             if (!b.title) { skipped.push({ title: '(no title)', reason: 'No title' }); continue }
-            const parts = String(b.author || '').trim().split(/\s+/).filter(Boolean)
-            const first = parts.slice(0, -1).join(' ') || (parts.length ? '-' : '')
-            const last = parts.slice(-1)[0] || ''
+            const last = String(b.author || '').trim().split(/\s+/).filter(Boolean).pop() || ''
             const titleKey = `${norm(b.title)}|${norm(last)}`
             if ((b.isbn && seenIsbn.has(b.isbn)) || seenTitle.has(titleKey)) {
                 skipped.push({ title: b.title, reason: 'Already in your library' })
@@ -131,26 +125,13 @@ router.post('/import', requireOwner, express.json({ limit: '5mb' }), async (req,
             }
             seenTitle.add(titleKey)
             if (b.isbn) seenIsbn.add(b.isbn)
-
             if (dryRun) { created.push({ title: b.title, author: b.author }); continue }
 
-            let author = null
-            if (last) {
-                author = authorMap.get(authorKey(first, last))
-                if (!author) {
-                    author = (await Author.create({ firstName: first, lastName: last, owner: req.user.id })).toObject()
-                    authorMap.set(authorKey(first, last), author)
-                }
-            }
+            const author = b.author ? await Authors.findOrCreateByName(b.author, req.user.id) : null
             const { author: _name, ...fields } = b
             Object.keys(fields).forEach((k) => (fields[k] === undefined || fields[k] === '') && delete fields[k])
-            const book = await Book.create({
-                ...fields,
-                author: author ? { id: author._id, firstName: author.firstName, lastName: author.lastName } : undefined,
-                createdAt: fields.createdAt || new Date(),
-                owner: req.user.id,
-            })
-            created.push({ id: book._id, title: book.title })
+            const id = await Books.insert({ ...fields, author: author ? { id: author._id } : undefined, owner: req.user.id })
+            created.push({ id, title: b.title })
         }
         res.json({ dryRun, created: created.length, skipped, items: created.slice(0, 50) })
     } catch (err) {
